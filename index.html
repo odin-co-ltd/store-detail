@@ -27,6 +27,8 @@ textarea{min-height:80px;resize:vertical}
 .blk{border:2px solid #d5d5d0;border-radius:10px;padding:10px;margin-bottom:10px;background:#fafaf8}
 .blk .top{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .blk .top b{flex:1;font-size:17px}
+.blk summary{cursor:pointer;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.blk .st{font-size:14px;color:#999}.blk .st.on{color:#1f6f3f}
 .thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
 .adds{display:flex;flex-wrap:wrap;gap:6px}
 .step{background:#1f6f3f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin-right:6px}
@@ -82,14 +84,12 @@ input[type=range]{width:100%}
   </div>
 
   <div class="card">
-   <h3><span class="step">3</span>내용 넣기</h3>
+   <h3><span class="step">3</span>내용 넣기 (항목을 누르면 펼쳐집니다)</h3>
    <div class="hint">사진이나 글이 비어 있는 칸은 완성본에서 자동으로 빠집니다.</div>
    <div id="blocks"></div>
    <div class="adds">
-    <button class="sm" data-add="main">+ 대표사진</button>
-    <button class="sm" data-add="angle">+ 각도 사진</button>
-    <button class="sm" data-add="detail">+ 디테일</button>
-    <button class="sm" data-add="notice">+ 안내 글</button>
+    <button class="sm" data-add="angle">+ 사진 항목 추가</button>
+    <button class="sm" data-add="notice">+ 안내 글 추가</button>
    </div>
   </div>
  </div>
@@ -113,32 +113,45 @@ input[type=range]{width:100%}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const nl=s=>esc(s).replace(/\n/g,'<br>');
+const nm=b=>b.label||LABEL[b.type];
 const LABEL={main:'대표사진',angle:'각도 사진',detail:'디테일',notice:'안내 글'};
 let uid=1;
 let S={
  nameSize:42,nameBold:true,nameColor:'#222222',
  blocks:[
-  {id:uid++,type:'main',photo:'',url:'',title:'',text:''},
-  {id:uid++,type:'angle',photo:'',url:'',title:'앞모습',text:''},
-  {id:uid++,type:'angle',photo:'',url:'',title:'옆모습',text:''},
-  {id:uid++,type:'detail',photo:'',url:'',title:'디테일',text:''},
-  {id:uid++,type:'notice',photo:'',url:'',title:'배송 · 교환 안내',text:'배송: 주문 확인 후 순차 출고됩니다.\n교환/반품: 상품 수령 후 7일 이내 연락 주세요.\n(이 문구는 예시입니다. 실제 안내문으로 바꿔 주세요.)'}
+  {id:uid++,type:'angle',label:'정면 15°',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'정면 45°',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'옆면',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'윗면',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'뒷면 15°',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'뒷면 45°',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'특허증',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'뒷면',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'정면',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'detail',label:'디테일 1',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'detail',label:'디테일 2',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'detail',label:'디테일 3',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'detail',label:'디테일 4',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'색상 옵션',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'사이즈',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'angle',label:'원단표',photo:'',url:'',title:'',text:'',open:false}
  ]
 };
 
 /* ---------- 왼쪽 입력 화면 ---------- */
 function drawLeft(){
  $('blocks').innerHTML=S.blocks.map((b,i)=>{
-  const hasPhoto=b.type!=='notice';
-  return `<div class="blk" data-i="${i}">
-   <div class="top"><b>${i+1}. ${LABEL[b.type]}</b>
-    <button class="sm" data-up="${i}">▲</button><button class="sm" data-dn="${i}">▼</button><button class="sm del" data-del="${i}">삭제</button></div>
-   ${hasPhoto?`<input type="file" accept="image/*" data-file="${i}">
+  const hasPhoto=b.type!=='notice',ok=filled(b);
+  return `<details class="blk" id="blk${i}" data-i="${i}" ${b.open?'open':''}>
+   <summary><b>${i+1}. ${esc(nm(b))}</b><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span></summary>
+   <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
+   ${hasPhoto?`<label>사진</label><input type="file" accept="image/*" data-file="${i}">
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
      <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
-   ${b.type!=='main'?`<label>제목</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">`:''}
-   ${b.type!=='main'?`<label>설명 글</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`:''}
-  </div>`;}).join('');
+   <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
+   <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>
+   <div style="margin-top:8px"><button class="sm del" data-del="${i}">이 항목 삭제</button></div>
+  </details>`;}).join('');
 }
 
 /* ---------- 완성본(미리보기 = 내보내기 같은 모양) ---------- */
@@ -173,7 +186,7 @@ function filled(b){return !!(b.photo||b.url||b.title||b.text);}
 function drawOrder(){
  $('order').innerHTML=S.blocks.map((b,i)=>{
   const ok=filled(b);
-  return `<div class="oi" draggable="true" data-o="${i}"><span class="gr">⋮⋮</span><span class="nm">${LABEL[b.type]}${b.title?' · '+esc(b.title):''}</span><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-dn="${i}" ${i===S.blocks.length-1?'disabled':''}>↓</button></div>`;}).join('');
+  return `<div class="oi" draggable="true" data-o="${i}"><span class="gr">⋮⋮</span><span class="nm" title="누르면 아래 입력칸이 열립니다">${esc(nm(b))}</span><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-dn="${i}" ${i===S.blocks.length-1?'disabled':''}>↓</button></div>`;}).join('');
 }
 function all(){drawOrder();drawLeft();drawRight();}
 let dragI=null;
@@ -200,13 +213,16 @@ document.addEventListener('change',e=>{
   fr.readAsDataURL(t.files[0]);
  }
 });
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('blk'))S.blocks[+d.dataset.i].open=d.open;},true);
 document.addEventListener('click',e=>{
+ const nmEl=e.target.closest('#order .nm');
+ if(nmEl){const i=+nmEl.parentNode.dataset.o;S.blocks[i].open=true;drawLeft();const el=$('blk'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return;}
  const t=e.target.closest('button');if(!t)return;
  const d=t.dataset;
  if(d.up!==undefined){const i=+d.up;if(i>0){[S.blocks[i-1],S.blocks[i]]=[S.blocks[i],S.blocks[i-1]];all();}}
  if(d.dn!==undefined){const i=+d.dn;if(i<S.blocks.length-1){[S.blocks[i+1],S.blocks[i]]=[S.blocks[i],S.blocks[i+1]];all();}}
  if(d.del!==undefined){S.blocks.splice(+d.del,1);all();}
- if(d.add){S.blocks.push({id:uid++,type:d.add,photo:'',url:'',title:'',text:''});all();}
+ if(d.add){S.blocks.push({id:uid++,type:d.add,label:d.add==='notice'?'안내 글':'새 항목',photo:'',url:'',title:'',text:'',open:true});all();}
 });
 $('bHtml').onclick=async()=>{
  const html=render(true);
