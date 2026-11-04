@@ -29,6 +29,8 @@ textarea{min-height:80px;resize:vertical}
 .blk .top b{flex:1;font-size:17px}
 .blk summary{cursor:pointer;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .blk .st{font-size:14px;color:#999}.blk .st.on{color:#1f6f3f}
+.side{border:1px solid #d5d5d0;border-radius:8px;padding:8px;margin-top:8px;background:#fff}
+select{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6px}
 .thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
 .adds{display:flex;flex-wrap:wrap;gap:6px}
 .step{background:#1f6f3f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin-right:6px}
@@ -128,10 +130,9 @@ let S={
   {id:uid++,type:'angle',label:'뒷면 45°',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'특허증',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'뒷면',photo:'',url:'',title:'',text:'',open:false},
-  {id:uid++,type:'detail',label:'디테일 1',photo:'',url:'',title:'',text:'',open:false},
-  {id:uid++,type:'detail',label:'디테일 2',photo:'',url:'',title:'',text:'',open:false},
-  {id:uid++,type:'detail',label:'디테일 3',photo:'',url:'',title:'',text:'',open:false},
-  {id:uid++,type:'detail',label:'디테일 4',photo:'',url:'',title:'',text:'',open:false},
+  {id:uid++,type:'detail',label:'디테일 1',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
+  {id:uid++,type:'detail',label:'디테일 2',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
+  {id:uid++,type:'detail',label:'디테일 3',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
   {id:uid++,type:'angle',label:'색상 옵션',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'사이즈',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'원단표',photo:'',url:'',title:'',text:'',open:false}
@@ -139,9 +140,33 @@ let S={
 };
 
 /* ---------- 왼쪽 입력 화면 ---------- */
+function sideUI(b,i,k,name){
+ const ph=b[k+'Photo'],ur=b[k+'Url'],tx=b[k+'Text'];
+ return `<div class="side"><b>${name} 이미지 (없으면 비워 두세요)</b>
+  <input type="file" accept="image/*" data-file="${i}" data-slot="${k}Photo">
+  ${ph?`<img class="thumb" src="${ph}">`:''}
+  <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
+  <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea></div>`;
+}
+function detailUI(b,i){
+ const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
+ return `<label>가운데 기준 이미지</label>
+  <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
+  ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`}
+  ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
+  <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
+  <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목은 따로 한 번 더 보여주지 않기</label>
+  <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비면 이 디테일은 완성본에서 빠집니다.</div>`;
+}
 function drawLeft(){
  $('blocks').innerHTML=S.blocks.map((b,i)=>{
   const hasPhoto=b.type!=='notice',ok=filled(b);
+  if(b.type==='detail')return `<details class="blk" id="blk${i}" data-i="${i}" ${b.open?'open':''}>
+   <summary><b>${i+1}. ${esc(nm(b))}</b><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span></summary>
+   <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
+   ${detailUI(b,i)}
+   <div style="margin-top:8px"><button class="sm del" data-del="${i}">이 항목 삭제</button></div>
+  </details>`;
   return `<details class="blk" id="blk${i}" data-i="${i}" ${b.open?'open':''}>
    <summary><b>${i+1}. ${esc(nm(b))}</b><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span></summary>
    <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
@@ -166,10 +191,24 @@ function render(forExport){
  const out=[];
  out.push(`<div style="width:860px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
  out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:${+S.nameSize||42}px;margin:14px 0 0;font-weight:${S.nameBold===false?400:700};color:${esc(S.nameColor||'#222222')};">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
+ const src=(ph,ur)=>forExport?(ur||''):(ph||ur||'');
+ const baseSrc=b=>{if(b.base){const o=S.blocks.find(x=>String(x.id)===String(b.base));return o?src(o.photo,o.url):'';}return src(b.photo,b.url);};
+ const usedD=b=>b.type==='detail'&&(src(b.lPhoto,b.lUrl)||src(b.rPhoto,b.rUrl));
+ const hidden=new Set();
+ S.blocks.forEach(b=>{if(usedD(b)&&b.base&&b.hideBase!==false&&baseSrc(b))hidden.add(String(b.base));});
+ const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 10px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-20}px;${round?`height:${w-20}px;border-radius:50%;object-fit:cover;border:4px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:20px;font-weight:700;line-height:1.4;margin-top:12px;color:#222;">${nl(t)}</div>`:''}</td>`;
  S.blocks.forEach(b=>{
+  if(hidden.has(String(b.id)))return;
+  if(b.type==='detail'){
+   if(!usedD(b))return;
+   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?250:300,bw=both?360:460;
+   const cells=(L?side(L,b.lText,b.round!==false,sw):'')+(B?`<td style="width:${bw}px;padding:0;vertical-align:middle;"><img src="${esc(B)}" style="width:${bw}px;display:block;" alt=""></td>`:'')+(R?side(R,b.rText,b.round!==false,sw):'');
+   out.push(`<div style="padding:40px 0 10px;"><table role="presentation" style="margin:0 auto;border-collapse:collapse;"><tr>${cells}</tr></table></div>`);
+   return;
+  }
   const im=img(b),has=!!im;
   if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
-  else if(b.type==='angle'||b.type==='detail'){
+  else if(b.type==='angle'){
    if(!has&&!b.title&&!b.text)return;
    out.push(`<div style="padding:40px 0 10px;">${has?im:''}${(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:${b.type==='detail'?'left':'center'};">${b.title?`<div style="font-size:${b.type==='detail'?'28':'24'}px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:''}</div>`);
   }
@@ -182,7 +221,7 @@ function render(forExport){
  return out.join('\n');
 }
 function drawRight(){$('paper').innerHTML=render(false);}
-function filled(b){return !!(b.photo||b.url||b.title||b.text);}
+function filled(b){return !!(b.photo||b.url||b.title||b.text||b.lPhoto||b.lUrl||b.lText||b.rPhoto||b.rUrl||b.rText);}
 function drawOrder(){
  $('order').innerHTML=S.blocks.map((b,i)=>{
   const ok=filled(b);
@@ -203,13 +242,13 @@ document.addEventListener('input',e=>{
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
  if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
  if(t.id==='sub'){S.sub=t.value;drawRight();return;}
- if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.value;drawRight();drawOrder();}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT')drawLeft();}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
  if(t.dataset.file!==undefined&&t.files[0]){
   const i=+t.dataset.file,fr=new FileReader();
-  fr.onload=()=>{S.blocks[i].photo=fr.result;all();};
+  const slot=t.dataset.slot||'photo';fr.onload=()=>{S.blocks[i][slot]=fr.result;all();};
   fr.readAsDataURL(t.files[0]);
  }
 });
@@ -226,7 +265,7 @@ document.addEventListener('click',e=>{
 });
 $('bHtml').onclick=async()=>{
  const html=render(true);
- const miss=S.blocks.filter(b=>(b.type==='main'||b.type==='angle'||b.type==='detail')&&b.photo&&!b.url).length;
+ const miss=S.blocks.reduce((n,b)=>n+[['photo','url'],['lPhoto','lUrl'],['rPhoto','rUrl']].filter(q=>b[q[0]]&&!b[q[1]]).length,0);
  try{await navigator.clipboard.writeText(html);}catch(e){const ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
  $('msg').textContent='HTML을 복사했습니다.'+(miss?' 단, 인터넷 주소가 없는 사진 '+miss+'장은 빠졌습니다.':'');
 };
@@ -245,7 +284,7 @@ $('bSave').onclick=()=>{
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
  const f=e.target.files[0];if(!f)return;const fr=new FileReader();
- fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>b.id=uid++);$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
+ fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
 function syncName(){$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
