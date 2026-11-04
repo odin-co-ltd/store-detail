@@ -154,6 +154,8 @@ function detailUI(b,i){
   <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
   ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
+  <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||100}%</b></div>
+  <input type="range" min="100" max="180" step="5" value="${+b.zoom||100}" data-f="zoom" data-i="${i}">
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
   <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목은 따로 한 번 더 보여주지 않기</label>
   <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비면 이 디테일은 완성본에서 빠집니다.</div>`;
@@ -196,13 +198,13 @@ function render(forExport){
  const usedD=b=>b.type==='detail'&&(src(b.lPhoto,b.lUrl)||src(b.rPhoto,b.rUrl));
  const hidden=new Set();
  S.blocks.forEach(b=>{if(usedD(b)&&b.base&&b.hideBase!==false&&baseSrc(b))hidden.add(String(b.base));});
- const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 4px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-8}px;${round?`height:${w-8}px;border-radius:50%;object-fit:cover;border:3px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:16px;font-weight:700;line-height:1.4;margin-top:8px;color:#222;">${nl(t)}</div>`:''}</td>`;
+ const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 4px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-8}px;${round?`height:${w-8}px;border-radius:50%;object-fit:cover;border:3px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:18px;font-weight:700;line-height:1.4;margin-top:8px;color:#222;">${nl(t)}</div>`:''}</td>`;
  S.blocks.forEach(b=>{
   if(hidden.has(String(b.id)))return;
   if(b.type==='detail'){
    if(!usedD(b))return;
-   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?160:170,bw=both?540:580;
-   const cells=(L?side(L,b.lText,b.round!==false,sw):'')+(B?`<td style="width:${bw}px;padding:0;vertical-align:middle;"><img src="${esc(B)}" style="width:${bw}px;display:block;" alt=""></td>`:'')+(R?side(R,b.rText,b.round!==false,sw):'');
+   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?215:250,bw=both?430:500,z=Math.min(1.8,Math.max(1,(+b.zoom||100)/100));
+   const cells=(L?side(L,b.lText,b.round!==false,sw):'')+(B?`<td style="width:${bw}px;padding:0;vertical-align:middle;"><div style="width:${bw}px;overflow:hidden;"><img src="${esc(B)}" style="width:${Math.round(bw*z)}px;max-width:none;margin-left:-${Math.round((z-1)/2*bw)}px;display:block;" alt=""></div></td>`:'')+(R?side(R,b.rText,b.round!==false,sw):'');
    out.push(`<div style="padding:40px 0 10px;"><table role="presentation" style="margin:0 auto;border-collapse:collapse;"><tr>${cells}</tr></table></div>`);
    return;
   }
@@ -242,7 +244,7 @@ document.addEventListener('input',e=>{
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
  if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
  if(t.id==='sub'){S.sub=t.value;drawRight();return;}
- if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT')drawLeft();}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT')drawLeft();if(t.dataset.f==='zoom'&&t.previousElementSibling){const bb=t.previousElementSibling.querySelector('b');if(bb)bb.textContent=t.value+'%';}}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
