@@ -31,6 +31,22 @@ textarea{min-height:80px;resize:vertical}
 .adds{display:flex;flex-wrap:wrap;gap:6px}
 .step{background:#1f6f3f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin-right:6px}
 #paper{width:860px;max-width:100%;margin:0 auto;background:#fff;box-shadow:0 2px 10px #0003}
+.tune{background:#f6f8fb;border:1px solid #c9d3e3;border-radius:10px;padding:10px;margin-top:8px}
+.trow{display:flex;justify-content:space-between;align-items:center;margin:4px 0}
+.trow b{color:#1f5fbf}
+.chk{display:flex;align-items:center;gap:6px;margin:0;font-size:16px;color:#222}
+.clr{display:flex;align-items:center;gap:8px;font-size:16px}
+input[type=color]{width:52px;height:38px;padding:2px;border:1px solid #bbb;border-radius:8px;background:#fff}
+input[type=range]{width:100%}
+#order .oi{display:flex;align-items:center;gap:8px;border:1px solid #ccd5e3;border-radius:8px;background:#fff;padding:8px 10px;margin-bottom:6px;cursor:grab;user-select:none}
+#order .oi.drag{opacity:.4}
+#order .oi.over{border:2px dashed #1f6f3f;background:#eef7f1}
+#order .oi .gr{color:#999;font-size:18px;letter-spacing:-2px}
+#order .oi .nm{flex:1;font-size:16px}
+#order .oi .st{color:#999;font-size:14px}
+#order .oi .st.on{color:#1f6f3f}
+#order .oi button{padding:4px 10px;font-size:16px;background:#fff;border:1px solid #bbb}
+#order .oi button:disabled{opacity:.3;cursor:default}
 .hint{font-size:14px;color:#666;margin:6px 0}
 .out{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 #msg{font-size:15px;color:#1f6f3f;min-height:22px}
@@ -50,21 +66,29 @@ textarea{min-height:80px;resize:vertical}
   <div class="card">
    <h3><span class="step">1</span>제품 기본 정보</h3>
    <label>제품명</label><input type="text" id="name" value="코코 (엔틱)">
+   <div class="tune">
+    <div class="trow"><span>글자 크기</span><b id="nsv">42px</b></div>
+    <input type="range" id="nsize" min="20" max="80" value="42">
+    <div class="trow"><label class="chk"><input type="checkbox" id="nbold" checked> 굵은 글씨</label>
+     <span class="clr">글자 색상 <input type="color" id="ncolor" value="#222222"></span></div>
+   </div>
    <label>한 줄 소개 (없으면 비워 두세요)</label><input type="text" id="sub" value="">
-   <label>제품 정보표</label>
-   <div id="infoRows"></div>
-   <button class="sm" id="bAddRow">+ 줄 추가</button>
   </div>
 
   <div class="card">
-   <h3><span class="step">2</span>페이지 구성 (위에서 아래 순서)</h3>
-   <div class="hint">▲▼ 버튼으로 순서를 바꿉니다. 사진이나 글이 비어 있는 칸은 완성본에서 자동으로 빠집니다.</div>
+   <h3><span class="step">2</span>페이지 순서 바꾸기</h3>
+   <div class="hint">항목을 마우스로 끌어 원하는 위치에 놓으세요. 또는 ↑ ↓ 버튼을 누르세요. 제품명은 맨 위에 고정됩니다.</div>
+   <div id="order"></div>
+  </div>
+
+  <div class="card">
+   <h3><span class="step">3</span>내용 넣기</h3>
+   <div class="hint">사진이나 글이 비어 있는 칸은 완성본에서 자동으로 빠집니다.</div>
    <div id="blocks"></div>
    <div class="adds">
     <button class="sm" data-add="main">+ 대표사진</button>
     <button class="sm" data-add="angle">+ 각도 사진</button>
     <button class="sm" data-add="detail">+ 디테일</button>
-    <button class="sm" data-add="info">+ 제품정보표</button>
     <button class="sm" data-add="notice">+ 안내 글</button>
    </div>
   </div>
@@ -72,7 +96,7 @@ textarea{min-height:80px;resize:vertical}
 
  <div class="right">
   <div class="card">
-   <h3><span class="step">3</span>완성하기</h3>
+   <h3><span class="step">4</span>완성하기</h3>
    <div class="out">
     <button class="pri" id="bPng">이미지(PNG) 내려받기</button>
     <button class="pri" id="bHtml">카페24용 HTML 복사</button>
@@ -89,25 +113,23 @@ textarea{min-height:80px;resize:vertical}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const nl=s=>esc(s).replace(/\n/g,'<br>');
-const LABEL={main:'대표사진',angle:'각도 사진',detail:'디테일',info:'제품정보표',notice:'안내 글'};
+const LABEL={main:'대표사진',angle:'각도 사진',detail:'디테일',notice:'안내 글'};
 let uid=1;
 let S={
- info:[{k:'판매가',v:'60,000원 (부가세별도)'},{k:'사이즈',v:''},{k:'소재',v:''},{k:'색상',v:'나무 엔틱 / 방석 검정(유광)'}],
+ nameSize:42,nameBold:true,nameColor:'#222222',
  blocks:[
   {id:uid++,type:'main',photo:'',url:'',title:'',text:''},
   {id:uid++,type:'angle',photo:'',url:'',title:'앞모습',text:''},
   {id:uid++,type:'angle',photo:'',url:'',title:'옆모습',text:''},
   {id:uid++,type:'detail',photo:'',url:'',title:'디테일',text:''},
-  {id:uid++,type:'info',photo:'',url:'',title:'제품 정보',text:''},
   {id:uid++,type:'notice',photo:'',url:'',title:'배송 · 교환 안내',text:'배송: 주문 확인 후 순차 출고됩니다.\n교환/반품: 상품 수령 후 7일 이내 연락 주세요.\n(이 문구는 예시입니다. 실제 안내문으로 바꿔 주세요.)'}
  ]
 };
 
 /* ---------- 왼쪽 입력 화면 ---------- */
 function drawLeft(){
- $('infoRows').innerHTML=S.info.map((r,i)=>`<div class="row"><input type="text" placeholder="항목" value="${esc(r.k)}" style="max-width:110px" data-ik="${i}"><input type="text" placeholder="내용" value="${esc(r.v)}" data-iv="${i}"><button class="sm del" data-idel="${i}">×</button></div>`).join('');
  $('blocks').innerHTML=S.blocks.map((b,i)=>{
-  const hasPhoto=b.type!=='info'&&b.type!=='notice';
+  const hasPhoto=b.type!=='notice';
   return `<div class="blk" data-i="${i}">
    <div class="top"><b>${i+1}. ${LABEL[b.type]}</b>
     <button class="sm" data-up="${i}">▲</button><button class="sm" data-dn="${i}">▼</button><button class="sm del" data-del="${i}">삭제</button></div>
@@ -115,7 +137,7 @@ function drawLeft(){
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
      <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    ${b.type!=='main'?`<label>제목</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">`:''}
-   ${b.type!=='main'&&b.type!=='info'?`<label>설명 글</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`:''}
+   ${b.type!=='main'?`<label>설명 글</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`:''}
   </div>`;}).join('');
 }
 
@@ -130,17 +152,13 @@ function render(forExport){
  };
  const out=[];
  out.push(`<div style="width:860px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
- out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:42px;margin:14px 0 0;font-weight:700;">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
+ out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:${+S.nameSize||42}px;margin:14px 0 0;font-weight:${S.nameBold===false?400:700};color:${esc(S.nameColor||'#222222')};">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
  S.blocks.forEach(b=>{
   const im=img(b),has=!!im;
   if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
   else if(b.type==='angle'||b.type==='detail'){
    if(!has&&!b.title&&!b.text)return;
    out.push(`<div style="padding:40px 0 10px;">${has?im:''}${(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:${b.type==='detail'?'left':'center'};">${b.title?`<div style="font-size:${b.type==='detail'?'28':'24'}px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:''}</div>`);
-  }
-  else if(b.type==='info'){
-   const rows=S.info.filter(r=>r.k||r.v);if(!rows.length)return;
-   out.push(`<div style="padding:50px 40px 20px;">${b.title?`<div style="font-size:26px;font-weight:700;text-align:center;margin-bottom:18px;">${esc(b.title)}</div>`:''}<table style="width:100%;border-collapse:collapse;font-size:19px;border-top:2px solid #222;">${rows.map(r=>`<tr><th style="width:26%;text-align:left;padding:14px 12px;background:#f5f5f2;border-bottom:1px solid #ddd;">${esc(r.k)}</th><td style="padding:14px 12px;border-bottom:1px solid #ddd;">${esc(r.v)}</td></tr>`).join('')}</table>${b.text?`<div style="font-size:17px;color:#666;margin-top:12px;line-height:1.6;">${nl(b.text)}</div>`:''}</div>`);
   }
   else if(b.type==='notice'){
    if(!b.text&&!b.title)return;
@@ -151,16 +169,28 @@ function render(forExport){
  return out.join('\n');
 }
 function drawRight(){$('paper').innerHTML=render(false);}
-function all(){drawLeft();drawRight();}
+function filled(b){return !!(b.photo||b.url||b.title||b.text);}
+function drawOrder(){
+ $('order').innerHTML=S.blocks.map((b,i)=>{
+  const ok=filled(b);
+  return `<div class="oi" draggable="true" data-o="${i}"><span class="gr">⋮⋮</span><span class="nm">${LABEL[b.type]}${b.title?' · '+esc(b.title):''}</span><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-dn="${i}" ${i===S.blocks.length-1?'disabled':''}>↓</button></div>`;}).join('');
+}
+function all(){drawOrder();drawLeft();drawRight();}
+let dragI=null;
+document.addEventListener('dragstart',e=>{const o=e.target.closest&&e.target.closest('.oi');if(!o)return;dragI=+o.dataset.o;o.classList.add('drag');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(dragI));}catch(x){}});
+document.addEventListener('dragover',e=>{const o=e.target.closest&&e.target.closest('.oi');if(!o||dragI===null)return;e.preventDefault();document.querySelectorAll('.oi.over').forEach(x=>x.classList.remove('over'));o.classList.add('over');});
+document.addEventListener('dragend',()=>{dragI=null;document.querySelectorAll('.oi').forEach(x=>x.classList.remove('over','drag'));});
+document.addEventListener('drop',e=>{const o=e.target.closest&&e.target.closest('.oi');if(!o||dragI===null)return;e.preventDefault();const to=+o.dataset.o;if(to!==dragI){const [m]=S.blocks.splice(dragI,1);S.blocks.splice(to,0,m);}dragI=null;all();});
 
 /* ---------- 이벤트 ---------- */
 document.addEventListener('input',e=>{
  const t=e.target;
  if(t.id==='name'){S.name=t.value;drawRight();return;}
+ if(t.id==='nsize'){S.nameSize=+t.value;$('nsv').textContent=t.value+'px';drawRight();return;}
+ if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
+ if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
  if(t.id==='sub'){S.sub=t.value;drawRight();return;}
- if(t.dataset.ik!==undefined){S.info[+t.dataset.ik].k=t.value;drawRight();}
- if(t.dataset.iv!==undefined){S.info[+t.dataset.iv].v=t.value;drawRight();}
- if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.value;drawRight();}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.value;drawRight();drawOrder();}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
@@ -176,9 +206,7 @@ document.addEventListener('click',e=>{
  if(d.up!==undefined){const i=+d.up;if(i>0){[S.blocks[i-1],S.blocks[i]]=[S.blocks[i],S.blocks[i-1]];all();}}
  if(d.dn!==undefined){const i=+d.dn;if(i<S.blocks.length-1){[S.blocks[i+1],S.blocks[i]]=[S.blocks[i],S.blocks[i+1]];all();}}
  if(d.del!==undefined){S.blocks.splice(+d.del,1);all();}
- if(d.idel!==undefined){S.info.splice(+d.idel,1);all();}
  if(d.add){S.blocks.push({id:uid++,type:d.add,photo:'',url:'',title:'',text:''});all();}
- if(t.id==='bAddRow'){S.info.push({k:'',v:''});all();}
 });
 $('bHtml').onclick=async()=>{
  const html=render(true);
@@ -196,15 +224,16 @@ $('bPng').onclick=async()=>{
 $('bSave').onclick=()=>{
  const a=document.createElement('a');
  a.download=(S.name||'작업')+'_작업파일.json';
- a.href=URL.createObjectURL(new Blob([JSON.stringify({name:S.name,sub:S.sub,info:S.info,blocks:S.blocks})],{type:'application/json'}));a.click();
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
 };
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
  const f=e.target.files[0];if(!f)return;const fr=new FileReader();
- fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks.forEach(b=>b.id=uid++);$('name').value=S.name||'';$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
+ fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>b.id=uid++);$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-S.name='코코 (엔틱)';S.sub='';
+function syncName(){$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
 </body>
