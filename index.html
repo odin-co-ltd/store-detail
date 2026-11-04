@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>상세페이지 만들기 (시안)</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:#f2f2f0;color:#222;font-size:18px}
+header{background:#2b2b2b;color:#fff;padding:14px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+header h1{font-size:22px;margin:0;flex:1}
+header small{color:#bbb;font-size:14px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:10px 16px;background:#e6e6e2;color:#222}
+button.pri{background:#1f6f3f;color:#fff;font-weight:bold}
+button.sm{padding:6px 10px;font-size:15px}
+button.del{background:#f6d8d8;color:#900}
+.wrap{display:flex;gap:18px;padding:18px;align-items:flex-start}
+.left{width:430px;flex:none}
+.right{flex:1;min-width:0}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
+.card h3{margin:0 0 10px;font-size:19px}
+label{display:block;font-size:15px;color:#555;margin:8px 0 3px}
+input[type=text],textarea{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6px}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.row input{flex:1}
+.blk{border:2px solid #d5d5d0;border-radius:10px;padding:10px;margin-bottom:10px;background:#fafaf8}
+.blk .top{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.blk .top b{flex:1;font-size:17px}
+.thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
+.adds{display:flex;flex-wrap:wrap;gap:6px}
+.step{background:#1f6f3f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin-right:6px}
+#paper{width:860px;max-width:100%;margin:0 auto;background:#fff;box-shadow:0 2px 10px #0003}
+.hint{font-size:14px;color:#666;margin:6px 0}
+.out{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#msg{font-size:15px;color:#1f6f3f;min-height:22px}
+@media(max-width:900px){.wrap{flex-direction:column}.left{width:100%}}
+</style>
+</head>
+<body>
+<header>
+ <h1>세광가구 상세페이지 만들기 <small>시안 · 포토룸(자동 누끼) 없음 · 누끼 된 사진 사용</small></h1>
+ <button id="bSave">작업 저장</button>
+ <button id="bLoad">작업 불러오기</button>
+ <input type="file" id="fLoad" accept=".json" hidden>
+</header>
+
+<div class="wrap">
+ <div class="left">
+  <div class="card">
+   <h3><span class="step">1</span>제품 기본 정보</h3>
+   <label>제품명</label><input type="text" id="name" value="코코 (엔틱)">
+   <label>한 줄 소개 (없으면 비워 두세요)</label><input type="text" id="sub" value="">
+   <label>제품 정보표</label>
+   <div id="infoRows"></div>
+   <button class="sm" id="bAddRow">+ 줄 추가</button>
+  </div>
+
+  <div class="card">
+   <h3><span class="step">2</span>페이지 구성 (위에서 아래 순서)</h3>
+   <div class="hint">▲▼ 버튼으로 순서를 바꿉니다. 사진이나 글이 비어 있는 칸은 완성본에서 자동으로 빠집니다.</div>
+   <div id="blocks"></div>
+   <div class="adds">
+    <button class="sm" data-add="main">+ 대표사진</button>
+    <button class="sm" data-add="angle">+ 각도 사진</button>
+    <button class="sm" data-add="detail">+ 디테일</button>
+    <button class="sm" data-add="info">+ 제품정보표</button>
+    <button class="sm" data-add="notice">+ 안내 글</button>
+   </div>
+  </div>
+ </div>
+
+ <div class="right">
+  <div class="card">
+   <h3><span class="step">3</span>완성하기</h3>
+   <div class="out">
+    <button class="pri" id="bPng">이미지(PNG) 내려받기</button>
+    <button class="pri" id="bHtml">카페24용 HTML 복사</button>
+   </div>
+   <div class="hint">HTML 복사는 사진의 인터넷 주소(https://)가 있어야 그림이 나옵니다. 각 사진 칸 아래 "인터넷 주소" 칸에 넣어 주세요. 주소가 없으면 PNG로 내려받아 카페24에 올리시면 됩니다.</div>
+   <div id="msg"></div>
+  </div>
+  <div id="paper"></div>
+ </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nl=s=>esc(s).replace(/\n/g,'<br>');
+const LABEL={main:'대표사진',angle:'각도 사진',detail:'디테일',info:'제품정보표',notice:'안내 글'};
+let uid=1;
+let S={
+ info:[{k:'판매가',v:'60,000원 (부가세별도)'},{k:'사이즈',v:''},{k:'소재',v:''},{k:'색상',v:'나무 엔틱 / 방석 검정(유광)'}],
+ blocks:[
+  {id:uid++,type:'main',photo:'',url:'',title:'',text:''},
+  {id:uid++,type:'angle',photo:'',url:'',title:'앞모습',text:''},
+  {id:uid++,type:'angle',photo:'',url:'',title:'옆모습',text:''},
+  {id:uid++,type:'detail',photo:'',url:'',title:'디테일',text:''},
+  {id:uid++,type:'info',photo:'',url:'',title:'제품 정보',text:''},
+  {id:uid++,type:'notice',photo:'',url:'',title:'배송 · 교환 안내',text:'배송: 주문 확인 후 순차 출고됩니다.\n교환/반품: 상품 수령 후 7일 이내 연락 주세요.\n(이 문구는 예시입니다. 실제 안내문으로 바꿔 주세요.)'}
+ ]
+};
+
+/* ---------- 왼쪽 입력 화면 ---------- */
+function drawLeft(){
+ $('infoRows').innerHTML=S.info.map((r,i)=>`<div class="row"><input type="text" placeholder="항목" value="${esc(r.k)}" style="max-width:110px" data-ik="${i}"><input type="text" placeholder="내용" value="${esc(r.v)}" data-iv="${i}"><button class="sm del" data-idel="${i}">×</button></div>`).join('');
+ $('blocks').innerHTML=S.blocks.map((b,i)=>{
+  const hasPhoto=b.type!=='info'&&b.type!=='notice';
+  return `<div class="blk" data-i="${i}">
+   <div class="top"><b>${i+1}. ${LABEL[b.type]}</b>
+    <button class="sm" data-up="${i}">▲</button><button class="sm" data-dn="${i}">▼</button><button class="sm del" data-del="${i}">삭제</button></div>
+   ${hasPhoto?`<input type="file" accept="image/*" data-file="${i}">
+     ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
+     <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
+   ${b.type!=='main'?`<label>제목</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">`:''}
+   ${b.type!=='main'&&b.type!=='info'?`<label>설명 글</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`:''}
+  </div>`;}).join('');
+}
+
+/* ---------- 완성본(미리보기 = 내보내기 같은 모양) ---------- */
+function render(forExport){
+ const F="font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;";
+ const img=b=>{
+  if(forExport){return b.url?`<img src="${esc(b.url)}" style="width:100%;display:block;" alt="${esc(b.title||S.name)}">`:'';}
+  if(b.photo)return `<img src="${b.photo}" style="width:100%;display:block;">`;
+  if(b.url)return `<img src="${esc(b.url)}" style="width:100%;display:block;">`;
+  return '';
+ };
+ const out=[];
+ out.push(`<div style="width:860px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
+ out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:42px;margin:14px 0 0;font-weight:700;">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
+ S.blocks.forEach(b=>{
+  const im=img(b),has=!!im;
+  if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
+  else if(b.type==='angle'||b.type==='detail'){
+   if(!has&&!b.title&&!b.text)return;
+   out.push(`<div style="padding:40px 0 10px;">${has?im:''}${(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:${b.type==='detail'?'left':'center'};">${b.title?`<div style="font-size:${b.type==='detail'?'28':'24'}px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:''}</div>`);
+  }
+  else if(b.type==='info'){
+   const rows=S.info.filter(r=>r.k||r.v);if(!rows.length)return;
+   out.push(`<div style="padding:50px 40px 20px;">${b.title?`<div style="font-size:26px;font-weight:700;text-align:center;margin-bottom:18px;">${esc(b.title)}</div>`:''}<table style="width:100%;border-collapse:collapse;font-size:19px;border-top:2px solid #222;">${rows.map(r=>`<tr><th style="width:26%;text-align:left;padding:14px 12px;background:#f5f5f2;border-bottom:1px solid #ddd;">${esc(r.k)}</th><td style="padding:14px 12px;border-bottom:1px solid #ddd;">${esc(r.v)}</td></tr>`).join('')}</table>${b.text?`<div style="font-size:17px;color:#666;margin-top:12px;line-height:1.6;">${nl(b.text)}</div>`:''}</div>`);
+  }
+  else if(b.type==='notice'){
+   if(!b.text&&!b.title)return;
+   out.push(`<div style="padding:40px;margin-top:30px;background:#f5f5f2;">${b.title?`<div style="font-size:22px;font-weight:700;margin-bottom:10px;">${esc(b.title)}</div>`:''}<div style="font-size:17px;line-height:1.8;color:#555;">${nl(b.text)}</div></div>`);
+  }
+ });
+ out.push('</div>');
+ return out.join('\n');
+}
+function drawRight(){$('paper').innerHTML=render(false);}
+function all(){drawLeft();drawRight();}
+
+/* ---------- 이벤트 ---------- */
+document.addEventListener('input',e=>{
+ const t=e.target;
+ if(t.id==='name'){S.name=t.value;drawRight();return;}
+ if(t.id==='sub'){S.sub=t.value;drawRight();return;}
+ if(t.dataset.ik!==undefined){S.info[+t.dataset.ik].k=t.value;drawRight();}
+ if(t.dataset.iv!==undefined){S.info[+t.dataset.iv].v=t.value;drawRight();}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.value;drawRight();}
+});
+document.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.dataset.file!==undefined&&t.files[0]){
+  const i=+t.dataset.file,fr=new FileReader();
+  fr.onload=()=>{S.blocks[i].photo=fr.result;all();};
+  fr.readAsDataURL(t.files[0]);
+ }
+});
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button');if(!t)return;
+ const d=t.dataset;
+ if(d.up!==undefined){const i=+d.up;if(i>0){[S.blocks[i-1],S.blocks[i]]=[S.blocks[i],S.blocks[i-1]];all();}}
+ if(d.dn!==undefined){const i=+d.dn;if(i<S.blocks.length-1){[S.blocks[i+1],S.blocks[i]]=[S.blocks[i],S.blocks[i+1]];all();}}
+ if(d.del!==undefined){S.blocks.splice(+d.del,1);all();}
+ if(d.idel!==undefined){S.info.splice(+d.idel,1);all();}
+ if(d.add){S.blocks.push({id:uid++,type:d.add,photo:'',url:'',title:'',text:''});all();}
+ if(t.id==='bAddRow'){S.info.push({k:'',v:''});all();}
+});
+$('bHtml').onclick=async()=>{
+ const html=render(true);
+ const miss=S.blocks.filter(b=>(b.type==='main'||b.type==='angle'||b.type==='detail')&&b.photo&&!b.url).length;
+ try{await navigator.clipboard.writeText(html);}catch(e){const ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+ $('msg').textContent='HTML을 복사했습니다.'+(miss?' 단, 인터넷 주소가 없는 사진 '+miss+'장은 빠졌습니다.':'');
+};
+$('bPng').onclick=async()=>{
+ if(!window.html2canvas){$('msg').textContent='이미지 변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return;}
+ $('msg').textContent='이미지를 만드는 중입니다...';
+ const c=await html2canvas($('paper'),{scale:1,useCORS:true,backgroundColor:'#ffffff'});
+ const a=document.createElement('a');a.download=(S.name||'상세페이지')+'.png';a.href=c.toDataURL('image/png');a.click();
+ $('msg').textContent='PNG를 내려받았습니다. (긴 세로 이미지 1장)';
+};
+$('bSave').onclick=()=>{
+ const a=document.createElement('a');
+ a.download=(S.name||'작업')+'_작업파일.json';
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({name:S.name,sub:S.sub,info:S.info,blocks:S.blocks})],{type:'application/json'}));a.click();
+};
+$('bLoad').onclick=()=>$('fLoad').click();
+$('fLoad').onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const fr=new FileReader();
+ fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks.forEach(b=>b.id=uid++);$('name').value=S.name||'';$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
+ fr.readAsText(f);
+};
+S.name='코코 (엔틱)';S.sub='';
+all();
+</script>
+</body>
+</html>
