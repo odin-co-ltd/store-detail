@@ -196,12 +196,12 @@ function render(forExport){
  const usedD=b=>b.type==='detail'&&(src(b.lPhoto,b.lUrl)||src(b.rPhoto,b.rUrl));
  const hidden=new Set();
  S.blocks.forEach(b=>{if(usedD(b)&&b.base&&b.hideBase!==false&&baseSrc(b))hidden.add(String(b.base));});
- const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 10px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-20}px;${round?`height:${w-20}px;border-radius:50%;object-fit:cover;border:4px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:20px;font-weight:700;line-height:1.4;margin-top:12px;color:#222;">${nl(t)}</div>`:''}</td>`;
+ const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 4px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-8}px;${round?`height:${w-8}px;border-radius:50%;object-fit:cover;border:3px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:16px;font-weight:700;line-height:1.4;margin-top:8px;color:#222;">${nl(t)}</div>`:''}</td>`;
  S.blocks.forEach(b=>{
   if(hidden.has(String(b.id)))return;
   if(b.type==='detail'){
    if(!usedD(b))return;
-   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?250:300,bw=both?360:460;
+   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?160:170,bw=both?540:580;
    const cells=(L?side(L,b.lText,b.round!==false,sw):'')+(B?`<td style="width:${bw}px;padding:0;vertical-align:middle;"><img src="${esc(B)}" style="width:${bw}px;display:block;" alt=""></td>`:'')+(R?side(R,b.rText,b.round!==false,sw):'');
    out.push(`<div style="padding:40px 0 10px;"><table role="presentation" style="margin:0 auto;border-collapse:collapse;"><tr>${cells}</tr></table></div>`);
    return;
