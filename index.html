@@ -34,7 +34,7 @@ select{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6
 .thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
 .adds{display:flex;flex-wrap:wrap;gap:6px}
 .step{background:#1f6f3f;color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;margin-right:6px}
-#paper{width:860px;max-width:100%;margin:0 auto;background:#fff;box-shadow:0 2px 10px #0003}
+#paper{width:900px;max-width:100%;margin:0 auto;background:#fff;box-shadow:0 2px 10px #0003}
 .tune{background:#f6f8fb;border:1px solid #c9d3e3;border-radius:10px;padding:10px;margin-top:8px}
 .trow{display:flex;justify-content:space-between;align-items:center;margin:4px 0}
 .trow b{color:#1f5fbf}
@@ -88,6 +88,11 @@ input[type=range]{width:100%}
   <div class="card">
    <h3><span class="step">3</span>내용 넣기 (항목을 누르면 펼쳐집니다)</h3>
    <div class="hint">사진이나 글이 비어 있는 칸은 완성본에서 자동으로 빠집니다.</div>
+   <div class="tune">
+    <label class="chk"><input type="checkbox" id="msize" checked> 상품 사진 크기를 디테일 페이지에 맞추기</label>
+    <div class="trow"><span>맞춘 크기에서 조절</span><b id="psv">100%</b></div>
+    <input type="range" id="pscale" min="60" max="160" step="5" value="100">
+   </div>
    <div id="blocks"></div>
    <div class="adds">
     <button class="sm" data-add="angle">+ 사진 항목 추가</button>
@@ -154,10 +159,15 @@ function detailUI(b,i){
   <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
   ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
+  <div class="side"><b>크기와 간격 (px)</b>
+   <label>가운데 기준 이미지 폭 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
+   <label>디테일 동그라미 지름 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="60" max="600" step="10" data-f="dw" data-i="${i}" placeholder="자동" value="${b.dw||''}">
+   <label>사진 사이 간격 (마이너스는 서로 겹쳐서 더 가깝게, 비우면 -30)</label><input type="number" min="-200" max="100" step="5" data-f="gap" data-i="${i}" placeholder="-30" value="${b.gap===undefined?'':b.gap}">
+  </div>
   <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||130}%</b></div>
   <input type="range" min="100" max="180" step="5" value="${+b.zoom||130}" data-f="zoom" data-i="${i}">
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
-  <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목은 따로 한 번 더 보여주지 않기</label>
+  <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목 자리에 합쳐서 보여주기 (기준 항목을 따로 한 번 더 보여주지 않음)</label>
   <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비면 이 디테일은 완성본에서 빠집니다.</div>`;
 }
 function drawLeft(){
@@ -174,6 +184,7 @@ function drawLeft(){
    <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
    ${hasPhoto?`<label>사진</label><input type="file" accept="image/*" data-file="${i}">
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
+     <label>이미지 폭 (px, 비우면 자동 · 최대 900)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
      <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
    <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>
@@ -191,28 +202,52 @@ function render(forExport){
   return '';
  };
  const out=[];
- out.push(`<div style="width:860px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
+ out.push(`<div style="width:900px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
  out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:${+S.nameSize||42}px;margin:14px 0 0;font-weight:${S.nameBold===false?400:700};color:${esc(S.nameColor||'#222222')};">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
  const src=(ph,ur)=>forExport?(ur||''):(ph||ur||'');
  const baseSrc=b=>{if(b.base){const o=S.blocks.find(x=>String(x.id)===String(b.base));return o?src(o.photo,o.url):'';}return src(b.photo,b.url);};
  const usedD=b=>b.type==='detail'&&(src(b.lPhoto,b.lUrl)||src(b.rPhoto,b.rUrl));
- const hidden=new Set();
- S.blocks.forEach(b=>{if(usedD(b)&&b.base&&b.hideBase!==false&&baseSrc(b))hidden.add(String(b.base));});
- const side=(u,t,round,w)=>`<td style="width:${w}px;padding:0 4px;text-align:center;vertical-align:middle;"><img src="${esc(u)}" style="width:${w-8}px;${round?`height:${w-8}px;border-radius:50%;object-fit:cover;border:3px solid #222;`:'height:auto;'}display:block;margin:0 auto;" alt="">${t?`<div style="font-size:20px;font-weight:700;line-height:1.4;margin-top:10px;color:#222;">${nl(t)}</div>`:''}</td>`;
+ const Wp=900;
+const geo=d=>{
+  const both=!!(src(d.lPhoto,d.lUrl)&&src(d.rPhoto,d.rUrl));
+  const gap=(d.gap===undefined||d.gap===''||isNaN(+d.gap))?-30:+d.gap;
+  const n=both?2:1;                 /* 동그라미 개수 */
+  const tot=Wp-n*gap;               /* 사진 폭의 합 (간격 겹침을 더해 전체가 900이 되도록) */
+  let bw=+d.w>0?+d.w:0,dw=+d.dw>0?+d.dw:0;
+  if(!bw&&!dw){bw=dw=tot/(n+1);}
+  else if(!bw){bw=Math.max(100,tot-n*dw);}
+  else if(!dw){dw=Math.max(60,(tot-bw)/n);}
+  return {both,bw,dw,gap,z:Math.min(1.8,Math.max(1,(+d.zoom||130)/100))};};
+ const refD=S.blocks.find(usedD);
+ const matchW=(S.matchSize!==false&&refD)?(()=>{const g=geo(refD);return g.bw*g.z*((+S.prodScale||100)/100);})():0;
+ const pimg=b=>{
+  const u=forExport?(b.url||''):(b.photo||b.url||'');if(!u)return '';
+  const alt=esc(b.title||S.name);
+  const w0=+b.w>0?Math.min(Wp,+b.w):(matchW?Math.min(Wp,Math.round(matchW)):0);
+  if(!w0)return `<img src="${esc(u)}" style="width:100%;display:block;" alt="${alt}">`;
+  return forExport?`<img src="${esc(u)}" style="width:${(w0/Wp*100).toFixed(1)}%;display:block;margin:0 auto;" alt="${alt}">`:`<img src="${esc(u)}" style="width:${w0}px;max-width:100%;display:block;margin:0 auto;" alt="${alt}">`;
+ };
+ const compD=d=>{
+  const L=src(d.lPhoto,d.lUrl),R=src(d.rPhoto,d.rUrl),B=baseSrc(d),g=geo(d),round=d.round!==false,z=g.z;
+  const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
+  let first=true,cap=false;
+  const mg=()=>{const m=first?0:g.gap;first=false;return len(m);};
+  const circ=(u,t)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:middle;width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid #222;box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const items=(L?circ(L,d.lText):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText):'');
+  return `<div style="padding:40px 0 ${cap?80:20}px;"><div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
+ };
+ const capB=b=>(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:center;">${b.title?`<div style="font-size:24px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:'';
+ const baseOf=new Map();
+ S.blocks.forEach(d=>{if(usedD(d)&&d.base&&d.hideBase!==false&&baseSrc(d)){const k=String(d.base);if(!baseOf.has(k))baseOf.set(k,[]);baseOf.get(k).push(d);}});
+ const moved=new Set();baseOf.forEach(a=>a.forEach(d=>moved.add(d.id)));
  S.blocks.forEach(b=>{
-  if(hidden.has(String(b.id)))return;
-  if(b.type==='detail'){
-   if(!usedD(b))return;
-   const L=src(b.lPhoto,b.lUrl),R=src(b.rPhoto,b.rUrl),B=baseSrc(b),both=L&&R,sw=both?286:400,bw=sw,z=Math.min(1.8,Math.max(1,(+b.zoom||130)/100));
-   const cells=(L?side(L,b.lText,b.round!==false,sw):'')+(B?`<td style="width:${bw}px;padding:0;vertical-align:middle;"><div style="width:${bw}px;overflow:hidden;"><img src="${esc(B)}" style="width:${Math.round(bw*z)}px;max-width:none;margin-left:-${Math.round((z-1)/2*bw)}px;display:block;" alt=""></div></td>`:'')+(R?side(R,b.rText,b.round!==false,sw):'');
-   out.push(`<div style="padding:40px 0 10px;"><table role="presentation" style="margin:0 auto;border-collapse:collapse;"><tr>${cells}</tr></table></div>`);
-   return;
-  }
-  const im=img(b),has=!!im;
+  if(baseOf.has(String(b.id))){baseOf.get(String(b.id)).forEach(d=>out.push(compD(d)));if(b.title||b.text)out.push(`<div style="padding-bottom:10px;">${capB(b)}</div>`);return;}
+  if(b.type==='detail'){if(moved.has(b.id)||!usedD(b))return;out.push(compD(b));return;}
+  const im=pimg(b),has=!!im;
   if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
   else if(b.type==='angle'){
    if(!has&&!b.title&&!b.text)return;
-   out.push(`<div style="padding:40px 0 10px;">${has?im:''}${(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:${b.type==='detail'?'left':'center'};">${b.title?`<div style="font-size:${b.type==='detail'?'28':'24'}px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:''}</div>`);
+   out.push(`<div style="padding:40px 0 10px;">${has?im:''}${capB(b)}</div>`);
   }
   else if(b.type==='notice'){
    if(!b.text&&!b.title)return;
@@ -227,7 +262,7 @@ function filled(b){return !!(b.photo||b.url||b.title||b.text||b.lPhoto||b.lUrl||
 function drawOrder(){
  $('order').innerHTML=S.blocks.map((b,i)=>{
   const ok=filled(b);
-  return `<div class="oi" draggable="true" data-o="${i}"><span class="gr">⋮⋮</span><span class="nm" title="누르면 아래 입력칸이 열립니다">${esc(nm(b))}</span><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-dn="${i}" ${i===S.blocks.length-1?'disabled':''}>↓</button></div>`;}).join('');
+  return `<div class="oi" draggable="true" data-o="${i}"><span class="gr">⋮⋮</span><span class="nm" title="누르면 아래 입력칸이 열립니다">${esc(nm(b))}${(b.type==='detail'&&b.base&&b.hideBase!==false&&S.blocks.find(x=>String(x.id)===String(b.base)))?' <small style="color:#1f6f3f">→ '+esc(nm(S.blocks.find(x=>String(x.id)===String(b.base))))+' 자리에 합쳐 표시</small>':''}</span><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-dn="${i}" ${i===S.blocks.length-1?'disabled':''}>↓</button></div>`;}).join('');
 }
 function all(){drawOrder();drawLeft();drawRight();}
 let dragI=null;
@@ -240,6 +275,8 @@ document.addEventListener('drop',e=>{const o=e.target.closest&&e.target.closest(
 document.addEventListener('input',e=>{
  const t=e.target;
  if(t.id==='name'){S.name=t.value;drawRight();return;}
+ if(t.id==='msize'){S.matchSize=t.checked;drawRight();return;}
+ if(t.id==='pscale'){S.prodScale=+t.value;$('psv').textContent=t.value+'%';drawRight();return;}
  if(t.id==='nsize'){S.nameSize=+t.value;$('nsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
  if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
@@ -281,7 +318,7 @@ $('bPng').onclick=async()=>{
 $('bSave').onclick=()=>{
  const a=document.createElement('a');
  a.download=(S.name||'작업')+'_작업파일.json';
- a.href=URL.createObjectURL(new Blob([JSON.stringify({nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
 };
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
@@ -289,7 +326,7 @@ $('fLoad').onchange=e=>{
  fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-function syncName(){$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
