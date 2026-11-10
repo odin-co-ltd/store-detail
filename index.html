@@ -177,7 +177,7 @@ function drawLeft(){
    <summary><b>${i+1}. ${esc(nm(b))}</b><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span></summary>
    <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
    ${detailUI(b,i)}
-   <div style="margin-top:8px"><button class="sm del" data-del="${i}">이 항목 삭제</button></div>
+   <div style="margin-top:8px"><button class="sm del" data-reset="${i}">이 항목 초기화</button></div>
   </details>`;
   return `<details class="blk" id="blk${i}" data-i="${i}" ${b.open?'open':''}>
    <summary><b>${i+1}. ${esc(nm(b))}</b><span class="st${ok?' on':''}">${ok?'입력됨':'미입력'}</span></summary>
@@ -188,7 +188,7 @@ function drawLeft(){
      <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
    <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>
-   <div style="margin-top:8px"><button class="sm del" data-del="${i}">이 항목 삭제</button></div>
+   <div style="margin-top:8px"><button class="sm del" data-reset="${i}">이 항목 초기화</button></div>
   </details>`;}).join('');
 }
 
@@ -299,7 +299,17 @@ document.addEventListener('click',e=>{
  const d=t.dataset;
  if(d.up!==undefined){const i=+d.up;if(i>0){[S.blocks[i-1],S.blocks[i]]=[S.blocks[i],S.blocks[i-1]];all();}}
  if(d.dn!==undefined){const i=+d.dn;if(i<S.blocks.length-1){[S.blocks[i+1],S.blocks[i]]=[S.blocks[i],S.blocks[i+1]];all();}}
- if(d.del!==undefined){S.blocks.splice(+d.del,1);all();}
+ if(d.reset!==undefined){
+  const i=+d.reset,b=S.blocks[i];
+  if(!b||!confirm('"'+nm(b)+'" 항목의 사진과 글을 모두 비우고 처음 상태로 되돌릴까요?\n(항목 이름과 순서는 그대로 남습니다)'))return;
+  const keep={id:b.id,type:b.type,label:b.label,open:true};
+  const blank=b.type==='detail'
+   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true}
+   :{photo:'',url:'',title:'',text:''};
+  S.blocks[i]=Object.assign(keep,blank);
+  all();
+  const el=$('blk'+i);if(el)el.scrollIntoView({block:'center'});
+ }
  if(d.add){S.blocks.push({id:uid++,type:d.add,label:d.add==='notice'?'안내 글':'새 항목',photo:'',url:'',title:'',text:'',open:true});all();}
 });
 $('bHtml').onclick=async()=>{
