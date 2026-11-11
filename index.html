@@ -200,7 +200,7 @@ function detailUI(b,i){
    <div class="hint">화살표는 기준 사진에서 눌러 둔 곳에서 출발해 동그란 디테일 사진을 가리킵니다.</div></div>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
   <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목 자리에 합쳐서 보여주기 (기준 항목을 따로 한 번 더 보여주지 않음)</label>
-  <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비면 이 디테일은 완성본에서 빠집니다.</div>`;
+  <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비우면 가운데 사진만 한 장으로 나옵니다.</div>`;
 }
 function drawLeft(){
  $('blocks').innerHTML=S.blocks.map((b,i)=>{
@@ -303,7 +303,11 @@ const geo=d=>{
  const moved=new Set();baseOf.forEach(a=>a.forEach(d=>moved.add(d.id)));
  S.blocks.forEach(b=>{
   if(baseOf.has(String(b.id))){baseOf.get(String(b.id)).forEach(d=>out.push(compD(d)));if(b.title||b.text)out.push(`<div style="padding-bottom:10px;">${capB(b)}</div>`);return;}
-  if(b.type==='detail'){if(moved.has(b.id)||!usedD(b))return;out.push(compD(b));return;}
+  if(b.type==='detail'){if(moved.has(b.id))return;
+   if(!usedD(b)){   /* 동그라미 없이 가운데 사진만 직접 올린 경우: 사진 한 장으로 보여줌 */
+    const im=(!b.base)?pimg(b):'';if(!im&&!b.title&&!b.text)return;
+    out.push(`<div style="padding:40px 0 10px;">${im}${capB(b)}</div>`);return;}
+   out.push(compD(b));return;}
   const im=pimg(b),has=!!im;
   if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
   else if(b.type==='angle'){
@@ -351,7 +355,7 @@ document.addEventListener('change',e=>{
  if(t.dataset.file!==undefined&&t.files[0]){
   const i=+t.dataset.file,fr=new FileReader();
   const slot=t.dataset.slot||'photo';fr.onload=()=>{S.blocks[i][slot]=fr.result;all();};
-  fr.readAsDataURL(t.files[0]);
+  fr.readAsDataURL(t.files[0]);t.value='';
  }
 });
 document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('blk'))S.blocks[+d.dataset.i].open=d.open;},true);
