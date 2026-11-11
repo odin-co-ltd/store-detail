@@ -116,7 +116,7 @@ input[type=range]{width:100%}
    <div id="msg"></div>
   </div>
   <div id="paper"></div>
- <div id="pickbar"><span>오른쪽 완성본에서 화살표가 가리킬 곳(점선 칸 안)을 눌러 주세요</span><button data-pickx="1">취소</button></div>
+ <div id="pickbar"><span>오른쪽 완성본에서 화살표가 출발할 곳(점선 칸 안)을 눌러 주세요</span><button data-pickx="1">취소</button></div>
  </div>
 </div>
 
@@ -163,7 +163,7 @@ function sideUI(b,i,k,name){
   <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
   <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
-  ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 가리킬 곳 사진에서 누르기</button>`:''}</div>`;
+  ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>`:''}</div>`;
 }
 function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
@@ -178,11 +178,12 @@ function detailUI(b,i){
   </div>
   <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||130}%</b></div>
   <input type="range" min="100" max="180" step="5" value="${+b.zoom||130}" data-f="zoom" data-i="${i}">
-  <div class="side"><b>화살표 모양 (위에서 "화살표 넣기"를 켠 경우)</b>
-   <div class="trow" style="margin-top:6px"><span>굵기</span><b>${+b.aw||5}px</b></div>
-   <input type="range" min="2" max="14" step="1" value="${+b.aw||5}" data-f="aw" data-i="${i}">
-   <div class="trow"><span class="clr">색상 <input type="color" data-f="ac" data-i="${i}" value="${b.ac||'#e03131'}"></span></div>
-   <div class="hint">화살표는 동그란 디테일 사진에서 시작해 기준 사진의 눌러 둔 곳을 가리킵니다.</div></div>
+  <div class="side"><b>화살표와 동그라미 모양</b>
+   <div class="trow" style="margin-top:6px"><span>굵기</span><b>${+b.aw||10}px</b></div>
+   <input type="range" min="3" max="24" step="1" value="${+b.aw||10}" data-f="aw" data-i="${i}">
+   <div class="trow"><span class="clr">화살표 색상 <input type="color" data-f="ac" data-i="${i}" value="${b.ac||'#2fd65a'}"></span><span class="clr">동그라미 테두리 <input type="color" data-f="bc" data-i="${i}" value="${b.bc||'#222222'}"></span></div>
+   <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="sh" data-i="${i}" ${b.sh?'checked':''}> 동그라미에 그림자 넣기</label>
+   <div class="hint">화살표는 기준 사진에서 눌러 둔 곳에서 출발해 동그란 디테일 사진을 가리킵니다.</div></div>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
   <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목 자리에 합쳐서 보여주기 (기준 항목을 따로 한 번 더 보여주지 않음)</label>
   <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비면 이 디테일은 완성본에서 빠집니다.</div>`;
@@ -249,7 +250,7 @@ const geo=d=>{
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false;
   const mg=()=>{const m=first?0:g.gap;first=false;return len(m);};
-  const circ=(u,t)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:middle;width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid #222;box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const circ=(u,t)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:middle;width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
   const items=(L?circ(L,d.lText):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText):'');
   const arrows=()=>{
    if(!B)return '';
@@ -260,14 +261,16 @@ const geo=d=>{
    const place=(k,w)=>{const m=f2?0:g.gap;f2=false;pos[k]=cur+m;cur=pos[k]+w;};
    if(L)place('l',g.dw);place('b',g.bw);if(R)place('r',g.dw);
    const x0=(Wp-cur)/2,H=Math.max(bh,L?cH(L):0,R?cH(R):0);
-   const col=d.ac||'#e03131',aw=+d.aw||5,hs=Math.max(16,aw*4);
+   const col=d.ac||'#2fd65a',aw=+d.aw||10,hs=Math.max(26,aw*3.2);
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
     const cx=x0+pos[k]+g.dw/2,cy=H/2,r=g.dw/2,tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
-    const dx=tx-cx,dy=ty-cy,len=Math.hypot(dx,dy);if(len<r+hs+12)return;
-    const ux=dx/len,uy=dy/len,sx=cx+ux*(r+8),sy=cy+uy*(r+8),ex=tx-ux*hs*.8,ey=ty-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
-    sv+=`<line x1="${f(sx)}" y1="${f(sy)}" x2="${f(ex)}" y2="${f(ey)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${f(tx)},${f(ty)} ${f(tx-ux*hs+px*hs*.5)},${f(ty-uy*hs+py*hs*.5)} ${f(tx-ux*hs-px*hs*.5)},${f(ty-uy*hs-py*hs*.5)}" fill="${esc(col)}"/>`;
+    const dx=cx-tx,dy=cy-ty,len=Math.hypot(dx,dy);if(len<r+hs+16)return;
+    const ux=dx/len,uy=dy/len,ex=cx-ux*(r+4),ey=cy-uy*(r+4),bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
+    const dk='#'+[1,3,5].map(i=>Math.round(parseInt((col+'').slice(i,i+2)||'0',16)*.55).toString(16).padStart(2,'0')).join('');
+    const hp=`${f(ex)},${f(ey)} ${f(ex-ux*hs+px*hs*.5)},${f(ey-uy*hs+py*hs*.5)} ${f(ex-ux*hs-px*hs*.5)},${f(ey-uy*hs-py*hs*.5)}`;
+    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`;
    });
    return sv?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="position:absolute;left:0;top:40px;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;z-index:3;">${sv}</svg>`:'';
   };
@@ -334,7 +337,7 @@ document.addEventListener('click',e=>{
  if(PICK&&!e.target.closest('#pickbar')){
   const bi=e.target.closest('#paper [data-bi]');
   if(bi&&+bi.dataset.bi===PICK.i){const r=bi.getBoundingClientRect(),b=S.blocks[PICK.i],cl=v=>+Math.min(1,Math.max(0,v)).toFixed(3);
-   b[PICK.k+'Ax']=cl((e.clientX-r.left)/r.width);b[PICK.k+'Ay']=cl((e.clientY-r.top)/r.height);endPick();drawRight();$('msg').textContent='화살표 위치를 정했습니다. 바꾸려면 "화살표가 가리킬 곳" 버튼을 다시 누르세요.';return;}
+   b[PICK.k+'Ax']=cl((e.clientX-r.left)/r.width);b[PICK.k+'Ay']=cl((e.clientY-r.top)/r.height);endPick();drawRight();$('msg').textContent='화살표 위치를 정했습니다. 바꾸려면 "화살표가 출발할 곳" 버튼을 다시 누르세요.';return;}
  }
  const nmEl=e.target.closest('#order .nm');
  if(nmEl){const i=+nmEl.parentNode.dataset.o;S.blocks[i].open=true;drawLeft();const el=$('blk'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return;}
@@ -349,7 +352,7 @@ document.addEventListener('click',e=>{
   if(!b||!confirm('"'+nm(b)+'" 항목의 사진과 글을 모두 비우고 처음 상태로 되돌릴까요?\n(항목 이름과 순서는 그대로 남습니다)'))return;
   const keep={id:b.id,type:b.type,label:b.label,open:true};
   const blank=b.type==='detail'
-   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,ac:undefined,aw:undefined}
+   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined}
    :{photo:'',url:'',title:'',text:''};
   S.blocks[i]=Object.assign(keep,blank);
   all();
