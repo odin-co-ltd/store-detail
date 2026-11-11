@@ -30,6 +30,11 @@ textarea{min-height:80px;resize:vertical}
 .blk .top b{flex:1;font-size:15px}
 .blk summary{cursor:pointer;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .blk .st{font-size:12px;color:#999}.blk .st.on{color:#1f6f3f}
+.more{margin-top:8px;border:1px dashed #c8c8c2;border-radius:8px;padding:4px 8px;background:#fff}
+.more>summary{cursor:pointer;font-size:14px;color:#1f5fbf;list-style:none;display:block;text-align:left}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::before{content:'▶ ';font-size:11px}.more[open]>summary::before{content:'▼ '}
+.more .on{color:#1f6f3f;font-size:12px;margin-left:6px}
 .side{border:1px solid #d5d5d0;border-radius:8px;padding:8px;margin-top:8px;background:#fff}
 select{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6px}
 .thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
@@ -165,15 +170,17 @@ let S={
 };
 
 /* ---------- 왼쪽 입력 화면 ---------- */
+/* 필요할 때만 펼치는 칸: key = 펼침 상태를 기억할 이름, has = 안에 입력된 내용이 있는지 */
+function moreBox(b,i,key,label,has,inner){return `<details class="more" data-i="${i}" data-more="${key}" ${b[key]?'open':''}><summary>${label}${has?'<span class="on">입력됨</span>':''}</summary>${inner}</details>`;}
 function sideUI(b,i,k,name){
  const ph=b[k+'Photo'],ur=b[k+'Url'],tx=b[k+'Text'];
  return `<div class="side"><b>${name} 이미지 (없으면 비워 두세요)</b>
   <input type="file" accept="image/*" data-file="${i}" data-slot="${k}Photo">
   ${ph?`<img class="thumb" src="${ph}">`:''}
-  <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
   <label>${name} 동그라미 세로 위치 (기준 사진 기준)</label>
   <select data-f="${k}V" data-i="${i}"><option value="" ${!b[k+'V']?'selected':''}>중간</option><option value="top" ${b[k+'V']==='top'?'selected':''}>위</option><option value="bot" ${b[k+'V']==='bot'?'selected':''}>아래</option></select>
-  <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>
+  ${moreBox(b,i,k+'MoreOpen','인터넷 주소 · 설명 글 (필요할 때 펼치기)',!!(ur||tx),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
+  <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>`)}
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
   ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>${b[k+'Ex']!==undefined&&b[k+'Ex']!==''&&b[k+'Ex']!==null?` <button class="sm" data-eauto="${i}" data-side="${k}" style="margin-top:6px;background:#dde8fb;color:#1f5fbf">끝점 자동(동그라미 가리키기)으로 되돌리기</button>`:''}<div class="hint">완성본에서 빨간 점(출발)과 파란 점(끝)을 마우스로 끌어 옮길 수 있습니다.</div>`:''}</div>`;
 }
@@ -181,12 +188,13 @@ function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
  return `<label>가운데 기준 이미지</label>
   <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
-  ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`}
+  ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}${moreBox(b,i,'moreOpen','인터넷 주소 (필요할 때 펼치기)',!!b.url,`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`)}`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
   <div class="side"><b>크기와 간격 (px)</b>
    <label>가운데 기준 이미지 폭 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
    <label>디테일 동그라미 지름 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="60" max="600" step="10" data-f="dw" data-i="${i}" placeholder="자동" value="${b.dw||''}">
-   <label>사진 사이 간격 (마이너스는 서로 겹쳐서 더 가깝게, 비우면 -30)</label><input type="number" min="-200" max="100" step="5" data-f="gap" data-i="${i}" placeholder="-30" value="${b.gap===undefined?'':b.gap}">
+   <label>왼쪽 디테일 ↔ 기준 이미지 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="lGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.lGap===undefined?'':b.lGap}">
+    <label>기준 이미지 ↔ 오른쪽 디테일 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="rGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.rGap===undefined?'':b.rGap}">
   </div>
   <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||130}%</b></div>
   <input type="range" min="100" max="180" step="5" value="${+b.zoom||130}" data-f="zoom" data-i="${i}">
@@ -202,6 +210,7 @@ function detailUI(b,i){
   <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="hideBase" data-i="${i}" ${b.hideBase!==false?'checked':''}> 기준 항목 자리에 합쳐서 보여주기 (기준 항목을 따로 한 번 더 보여주지 않음)</label>
   <div class="hint">왼쪽(L)·오른쪽(R) 중 하나만 넣으면 기준 이미지와 합쳐 가운데로 놓습니다. 둘 다 비우면 가운데 사진만 한 장으로 나옵니다.</div>`;
 }
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.more){const b=S.blocks[+d.dataset.i];if(b)b[d.dataset.more]=d.open;}},true);
 function drawLeft(){
  $('blocks').innerHTML=S.blocks.map((b,i)=>{
   const hasPhoto=b.type!=='notice',ok=filled(b);
@@ -217,9 +226,10 @@ function drawLeft(){
    ${hasPhoto?`<label>사진</label><input type="file" accept="image/*" data-file="${i}">
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
      <label>이미지 폭 (px, 비우면 자동 · 최대 900)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
-     <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
+`:''}
+   ${moreBox(b,i,'moreOpen',hasPhoto?'인터넷 주소 · 제목 · 설명 (필요할 때 펼치기)':'제목 · 설명 (필요할 때 펼치기)',!!((hasPhoto&&b.url)||b.title||b.text),`${hasPhoto?`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
-   <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>
+   <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`)}
    <div style="margin-top:8px"><button class="sm del" data-reset="${i}">이 항목 초기화</button></div>
   </details>`;}).join('');
 }
@@ -244,15 +254,17 @@ function render(forExport){
  const Wp=900;const f1=v=>v.toFixed(1);
 const geo=d=>{
   const both=!!(src(d.lPhoto,d.lUrl)&&src(d.rPhoto,d.rUrl));
-  const gap=(d.gap===undefined||d.gap===''||isNaN(+d.gap))?-30:+d.gap;
+  const num=(v,def)=>(v===undefined||v===null||v===''||isNaN(+v))?def:+v;
+  const gap=num(d.gap,-30),lg=num(d.lGap,gap),rg=num(d.rGap,gap);   /* 왼쪽·오른쪽 간격 각각 */
+  const hasL=!!src(d.lPhoto,d.lUrl),hasR=!!src(d.rPhoto,d.rUrl);
   const n=both?2:1;                 /* 동그라미 개수 */
-  const tot=Wp-n*Math.max(0,gap);   /* 사진 폭의 합: 마이너스 간격(겹침)일 때 사진을 키우지 않아야 실제로 가까워짐 */
+  const tot=Wp-(hasL?Math.max(0,lg):0)-(hasR?Math.max(0,rg):0);   /* 사진 폭의 합: 마이너스 간격(겹침)일 때 사진을 키우지 않아야 실제로 가까워짐 */
   let bw=+d.w>0?+d.w:0,dw=+d.dw>0?+d.dw:0;
   if(!bw&&!dw){bw=dw=tot/(n+1);}
   else if(!bw){bw=Math.max(100,tot-n*dw);}
   else if(!dw){dw=Math.max(60,(tot-bw)/n);}
   if(bw+n*dw>tot){const k=tot/(bw+n*dw);bw*=k;dw*=k;}   /* 900 넘으면 줄여서 맞춤 (화살표 어긋남 방지) */
-  return {both,bw,dw,gap,z:Math.min(1.8,Math.max(1,(+d.zoom||130)/100))};};
+  return {both,bw,dw,gap,lg,rg,z:Math.min(1.8,Math.max(1,(+d.zoom||130)/100))};};
  const refD=S.blocks.find(usedD);
  const matchW=(S.matchSize!==false&&refD)?(()=>{const g=geo(refD);return g.bw*g.z*((+S.prodScale||100)/100);})():0;
  const pimg=b=>{
@@ -266,16 +278,16 @@ const geo=d=>{
   const L=src(d.lPhoto,d.lUrl),R=src(d.rPhoto,d.rUrl),B=baseSrc(d),g=geo(d),round=d.round!==false,z=g.z;
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false;
-  const mg=()=>{const m=first?0:g.gap;first=false;return len(m);};
-  const circ=(u,t,v)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
-  const items=(L?circ(L,d.lText,d.lV):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText,d.rV):'');
+  const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
+  const circ=(u,t,v,k)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const items=(L?circ(L,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText,d.rV,'r'):'');
   const arrows=()=>{
    if(!B)return '';
    const sides=[];if(L&&d.lArr)sides.push(['l',L]);if(R&&d.rArr)sides.push(['r',R]);
    if(!sides.length)return '';
    const bh=g.bw*z*arOf(B,.75),cH=u=>round?g.dw:g.dw*arOf(u,1);
    let cur=0,f2=true;const pos={};
-   const place=(k,w)=>{const m=f2?0:g.gap;f2=false;pos[k]=cur+m;cur=pos[k]+w;};
+   const place=(k,w)=>{const m=f2?0:(k==='r'?g.rg:g.lg);f2=false;pos[k]=cur+m;cur=pos[k]+w;};
    if(L)place('l',g.dw);place('b',g.bw);if(R)place('r',g.dw);
    const x0=(Wp-cur)/2,H=Math.max(bh,L?cH(L):0,R?cH(R):0);
    const col=d.ac||'#2fd65a',aw=+d.aw||10,hs0=Math.max(aw*1.8,aw*3.2*((+d.hz||70)/100));   /* 화살촉은 최소한 막대보다 넓게 */   /* 화살촉 크기: 기본 70% */
