@@ -24,11 +24,11 @@ input[type=text],textarea{width:100%;font:inherit;padding:9px;border:1px solid #
 textarea{min-height:80px;resize:vertical}
 .row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .row input{flex:1}
-.blk{border:2px solid #d5d5d0;border-radius:10px;padding:10px;margin-bottom:10px;background:#fafaf8}
+.blk{border:2px solid #d5d5d0;border-radius:10px;padding:6px 10px;margin-bottom:6px;background:#fafaf8}
 .blk .top{display:flex;gap:6px;align-items:center;margin-bottom:6px}
-.blk .top b{flex:1;font-size:17px}
-.blk summary{cursor:pointer;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.blk .st{font-size:14px;color:#999}.blk .st.on{color:#1f6f3f}
+.blk .top b{flex:1;font-size:15px}
+.blk summary{cursor:pointer;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.blk .st{font-size:12px;color:#999}.blk .st.on{color:#1f6f3f}
 .side{border:1px solid #d5d5d0;border-radius:8px;padding:8px;margin-top:8px;background:#fff}
 select{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6px}
 .thumb{width:100%;max-height:130px;object-fit:contain;background:#eee;border-radius:6px;margin-top:6px}
@@ -42,14 +42,14 @@ select{width:100%;font:inherit;padding:9px;border:1px solid #bbb;border-radius:6
 .clr{display:flex;align-items:center;gap:8px;font-size:16px}
 input[type=color]{width:52px;height:38px;padding:2px;border:1px solid #bbb;border-radius:8px;background:#fff}
 input[type=range]{width:100%}
-#order .oi{display:flex;align-items:center;gap:8px;border:1px solid #ccd5e3;border-radius:8px;background:#fff;padding:8px 10px;margin-bottom:6px;cursor:grab;user-select:none}
+#order .oi{display:flex;align-items:center;gap:6px;border:1px solid #ccd5e3;border-radius:8px;background:#fff;padding:4px 8px;margin-bottom:4px;cursor:grab;user-select:none}
 #order .oi.drag{opacity:.4}
 #order .oi.over{border:2px dashed #1f6f3f;background:#eef7f1}
-#order .oi .gr{color:#999;font-size:18px;letter-spacing:-2px}
-#order .oi .nm{flex:1;font-size:16px}
-#order .oi .st{color:#999;font-size:14px}
+#order .oi .gr{color:#999;font-size:14px;letter-spacing:-2px}
+#order .oi .nm{flex:1;font-size:14px}
+#order .oi .st{color:#999;font-size:12px}
 #order .oi .st.on{color:#1f6f3f}
-#order .oi button{padding:4px 10px;font-size:16px;background:#fff;border:1px solid #bbb}
+#order .oi button{padding:2px 8px;font-size:14px;background:#fff;border:1px solid #bbb}
 #order .oi button:disabled{opacity:.3;cursor:default}
 .hint{font-size:14px;color:#666;margin:6px 0}
 .out{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -78,6 +78,8 @@ input[type=range]{width:100%}
    <div class="tune">
     <div class="trow"><span>글자 크기</span><b id="nsv">42px</b></div>
     <input type="range" id="nsize" min="20" max="80" value="42">
+    <div class="trow"><span>글자 간격</span><b id="nlsv">3px</b></div>
+    <input type="range" id="nls" min="0" max="20" value="3">
     <div class="trow"><label class="chk"><input type="checkbox" id="nbold" checked> 굵은 글씨</label>
      <span class="clr">글자 색상 <input type="color" id="ncolor" value="#222222"></span></div>
    </div>
@@ -101,6 +103,7 @@ input[type=range]{width:100%}
    <div id="blocks"></div>
    <div class="adds">
     <button class="sm" data-add="angle">+ 사진 항목 추가</button>
+    <button class="sm" data-add="detail">+ 디테일 추가</button>
     <button class="sm" data-add="notice">+ 안내 글 추가</button>
    </div>
   </div>
@@ -150,6 +153,8 @@ let S={
   {id:uid++,type:'detail',label:'디테일 1',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
   {id:uid++,type:'detail',label:'디테일 2',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
   {id:uid++,type:'detail',label:'디테일 3',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
+  {id:uid++,type:'detail',label:'디테일 4',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
+  {id:uid++,type:'detail',label:'디테일 5',photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:false},
   {id:uid++,type:'angle',label:'색상 옵션',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'사이즈',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'원단표',photo:'',url:'',title:'',text:'',open:false}
@@ -185,6 +190,8 @@ function detailUI(b,i){
   <div class="side"><b>화살표와 동그라미 모양</b>
    <div class="trow" style="margin-top:6px"><span>굵기</span><b>${+b.aw||10}px</b></div>
    <input type="range" min="3" max="24" step="1" value="${+b.aw||10}" data-f="aw" data-i="${i}">
+   <div class="trow" style="margin-top:6px"><span>화살촉(머리) 크기</span><b>${+b.hz||70}%</b></div>
+   <input type="range" min="30" max="150" step="5" value="${+b.hz||70}" data-f="hz" data-i="${i}">
    <div class="trow"><span class="clr">화살표 색상 <input type="color" data-f="ac" data-i="${i}" value="${b.ac||'#2fd65a'}"></span><span class="clr">동그라미 테두리 <input type="color" data-f="bc" data-i="${i}" value="${b.bc||'#222222'}"></span></div>
    <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="sh" data-i="${i}" ${b.sh?'checked':''}> 동그라미에 그림자 넣기</label>
    <div class="hint">화살표는 기준 사진에서 눌러 둔 곳에서 출발해 동그란 디테일 사진을 가리킵니다.</div></div>
@@ -225,7 +232,7 @@ function render(forExport){
  };
  const out=[];
  out.push(`<div style="width:900px;max-width:100%;margin:0 auto;background:#fff;color:#222;${F}">`);
- out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:${+S.nameSize||42}px;margin:14px 0 0;font-weight:${S.nameBold===false?400:700};color:${esc(S.nameColor||'#222222')};">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
+ out.push(`<div style="padding:60px 40px 30px;text-align:center;"><div style="font-size:15px;letter-spacing:4px;color:#888;">SEGWANG FURNITURE</div><h1 style="font-size:${+S.nameSize||42}px;letter-spacing:${S.nameLs===undefined?3:+S.nameLs}px;line-height:1.3;margin:14px 0 0;font-weight:${S.nameBold===false?400:700};color:${esc(S.nameColor||'#222222')};">${esc(S.name)}</h1>${S.sub?`<p style="font-size:20px;color:#666;margin:12px 0 0;">${esc(S.sub)}</p>`:''}</div>`);
  const src=(ph,ur)=>forExport?(ur||''):(ph||ur||'');
  const baseSrc=b=>{if(b.base){const o=S.blocks.find(x=>String(x.id)===String(b.base));return o?src(o.photo,o.url):'';}return src(b.photo,b.url);};
  const usedD=b=>b.type==='detail'&&(src(b.lPhoto,b.lUrl)||src(b.rPhoto,b.rUrl));
@@ -266,7 +273,7 @@ const geo=d=>{
    const place=(k,w)=>{const m=f2?0:g.gap;f2=false;pos[k]=cur+m;cur=pos[k]+w;};
    if(L)place('l',g.dw);place('b',g.bw);if(R)place('r',g.dw);
    const x0=(Wp-cur)/2,H=Math.max(bh,L?cH(L):0,R?cH(R):0);
-   const col=d.ac||'#2fd65a',aw=+d.aw||10,hs0=Math.max(26,aw*3.2);
+   const col=d.ac||'#2fd65a',aw=+d.aw||10,hs0=Math.max(aw*1.8,aw*3.2*((+d.hz||70)/100));   /* 화살촉은 최소한 막대보다 넓게 */   /* 화살촉 크기: 기본 70% */
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
@@ -279,7 +286,7 @@ const geo=d=>{
     const bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
     const dk='#'+[1,3,5].map(i=>Math.round(parseInt((col+'').slice(i,i+2)||'0',16)*.55).toString(16).padStart(2,'0')).join('');
     const hp=`${f(ex)},${f(ey)} ${f(ex-ux*hs+px*hs*.5)},${f(ey-uy*hs+py*hs*.5)} ${f(ex-ux*hs-px*hs*.5)},${f(ey-uy*hs-py*hs*.5)}`;
-    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="11" fill="#fff" stroke="#c92a2a" stroke-width="5" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="11" fill="#fff" stroke="#1f5fbf" stroke-width="5" style="pointer-events:all;cursor:grab"/>`);
+    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="8" fill="#fff" stroke="#c92a2a" stroke-width="4" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="9" fill="rgba(255,255,255,0.01)" stroke="#1f5fbf" stroke-width="4" style="pointer-events:all;cursor:grab"/>`);
    });
    return sv?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="position:absolute;left:0;top:40px;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;z-index:3;">${sv}</svg>`:'';
   };
@@ -327,10 +334,11 @@ document.addEventListener('input',e=>{
  if(t.id==='msize'){S.matchSize=t.checked;drawRight();return;}
  if(t.id==='pscale'){S.prodScale=+t.value;$('psv').textContent=t.value+'%';drawRight();return;}
  if(t.id==='nsize'){S.nameSize=+t.value;$('nsv').textContent=t.value+'px';drawRight();return;}
+ if(t.id==='nls'){S.nameLs=+t.value;$('nlsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
  if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
  if(t.id==='sub'){S.sub=t.value;drawRight();return;}
- if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT'||/Arr$/.test(t.dataset.f)){if(/Arr$/.test(t.dataset.f)&&!t.checked&&PICK)endPick();drawLeft();}if((t.dataset.f==='zoom'||t.dataset.f==='aw')&&t.previousElementSibling){const bb=t.previousElementSibling.querySelector('b');if(bb)bb.textContent=t.value+(t.dataset.f==='zoom'?'%':'px');}}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT'||/Arr$/.test(t.dataset.f)){if(/Arr$/.test(t.dataset.f)&&!t.checked&&PICK)endPick();drawLeft();}if((t.dataset.f==='zoom'||t.dataset.f==='aw'||t.dataset.f==='hz')&&t.previousElementSibling){const bb=t.previousElementSibling.querySelector('b');if(bb)bb.textContent=t.value+(t.dataset.f==='aw'?'px':'%');}}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
@@ -370,13 +378,13 @@ document.addEventListener('click',e=>{
   if(!b||!confirm('"'+nm(b)+'" 항목의 사진과 글을 모두 비우고 처음 상태로 되돌릴까요?\n(항목 이름과 순서는 그대로 남습니다)'))return;
   const keep={id:b.id,type:b.type,label:b.label,open:true};
   const blank=b.type==='detail'
-   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,lEx:undefined,lEy:undefined,rEx:undefined,rEy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined,lV:'',rV:''}
+   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,lEx:undefined,lEy:undefined,rEx:undefined,rEy:undefined,ac:undefined,aw:undefined,hz:undefined,bc:undefined,sh:undefined,lV:'',rV:''}
    :{photo:'',url:'',title:'',text:''};
   S.blocks[i]=Object.assign(keep,blank);
   all();
   const el=$('blk'+i);if(el)el.scrollIntoView({block:'center'});
  }
- if(d.add){S.blocks.push({id:uid++,type:d.add,label:d.add==='notice'?'안내 글':'새 항목',photo:'',url:'',title:'',text:'',open:true});all();}
+ if(d.add){if(d.add==='detail'){const n=S.blocks.filter(x=>x.type==='detail').length+1;const at=S.blocks.map(x=>x.type).lastIndexOf('detail')+1||S.blocks.length;S.blocks.splice(at,0,{id:uid++,type:'detail',label:'디테일 '+n,photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,open:true});}else S.blocks.push({id:uid++,type:d.add,label:d.add==='notice'?'안내 글':'새 항목',photo:'',url:'',title:'',text:'',open:true});all();}
 });
 $('bHtml').onclick=async()=>{
  await preload(S.blocks.flatMap(b=>[b.url,b.lUrl,b.rUrl]));
@@ -395,7 +403,7 @@ $('bPng').onclick=async()=>{
 $('bSave').onclick=()=>{
  const a=document.createElement('a');
  a.download=(S.name||'작업')+'_작업파일.json';
- a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,nameLs:S.nameLs,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
 };
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
@@ -403,7 +411,7 @@ $('fLoad').onchange=e=>{
  fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
