@@ -293,7 +293,8 @@ const geo=d=>{
     const hp=`${f(ex)},${f(ey)} ${f(ex-ux*hs+px*hs*.5)},${f(ey-uy*hs+py*hs*.5)} ${f(ex-ux*hs-px*hs*.5)},${f(ey-uy*hs-py*hs*.5)}`;
     sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="8" fill="#fff" stroke="#c92a2a" stroke-width="4" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="9" fill="rgba(255,255,255,0.01)" stroke="#1f5fbf" stroke-width="4" style="pointer-events:all;cursor:grab"/>`);
    });
-   return sv?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="position:absolute;left:0;top:40px;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;z-index:3;">${sv}</svg>`:'';
+   /* 이미지 저장 프로그램이 svg의 위치(top)를 두 번 적용해 화살표가 40px 내려가던 문제 → 위치는 바깥 칸이 맡고 svg는 그 안에 그대로 */
+   return sv?`<div style="position:absolute;left:0;top:40px;${forExport?'width:100%;':'width:'+Wp+'px;'}pointer-events:none;z-index:3;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="display:block;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;">${sv}</svg></div>`:'';
   };
   return `<div style="position:relative;padding:40px 0 ${cap?80:20}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
  };
