@@ -115,7 +115,7 @@ input[type=range]{width:100%}
   <div class="card">
    <h3><span class="step">4</span>완성하기</h3>
    <div class="out">
-    <button class="pri" id="bPng">이미지(PNG) 내려받기</button>
+    <button class="pri" id="bPng">이미지(PNG) 내려받기</button> <label class="chk" style="display:inline-flex;margin-left:8px"><input type="checkbox" id="dcWhite" checked> 디테일 바탕 흰색으로</label>
     <button class="pri" id="bHtml">카페24용 HTML 복사</button>
    </div>
    <div class="hint">HTML 복사는 사진의 인터넷 주소(https://)가 있어야 그림이 나옵니다. 각 사진 칸 아래 "인터넷 주소" 칸에 넣어 주세요. 주소가 없으면 PNG로 내려받아 카페24에 올리시면 됩니다.</div>
@@ -267,7 +267,7 @@ const geo=d=>{
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false;
   const mg=()=>{const m=first?0:g.gap;first=false;return len(m);};
-  const circ=(u,t,v)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const circ=(u,t,v)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg()};"><img data-dc="1" src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
   const items=(L?circ(L,d.lText,d.lV):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText,d.rV):'');
   const arrows=()=>{
    if(!B)return '';
@@ -403,11 +403,54 @@ $('bHtml').onclick=async()=>{
  try{await navigator.clipboard.writeText(html);}catch(e){const ta=document.createElement('textarea');ta.value=html;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
  $('msg').textContent='HTML을 복사했습니다.'+(miss?' 단, 인터넷 주소가 없는 사진 '+miss+'장은 빠졌습니다.':'');
 };
+
+/* 디테일 동그라미 사진의 회색 바탕을 흰색으로 바꾼 사본 만들기 (이미지 저장 때만 사용) */
+function whitenBg(url){return new Promise(res=>{
+ const im=new Image();im.crossOrigin='anonymous';
+ im.onload=()=>{try{
+  const M=1400,k=Math.min(1,M/Math.max(im.naturalWidth,im.naturalHeight));
+  const W=Math.max(1,Math.round(im.naturalWidth*k)),H=Math.max(1,Math.round(im.naturalHeight*k));
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const cx=cv.getContext('2d');
+  cx.drawImage(im,0,0,W,H);const id=cx.getImageData(0,0,W,H),p=id.data,N=W*H;
+  /* 1) 테두리 쪽 무채색 픽셀로 바탕색 추정 */
+  const rs=[],gs=[],bs=[];const add=i=>{const r=p[i*4],g=p[i*4+1],b=p[i*4+2];if(Math.max(r,g,b)-Math.min(r,g,b)<20&&Math.min(r,g,b)<240&&Math.max(r,g,b)>70&&p[i*4+3]>200){rs.push(r);gs.push(g);bs.push(b);}};
+  const bd=Math.max(2,Math.round(Math.min(W,H)*0.06));for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2){if(x<bd||y<bd||x>=W-bd||y>=H-bd)add(y*W+x);}
+  if(rs.length<20){res(url);return;}
+  const med=a=>{a.sort((m,n)=>m-n);return a[a.length>>1];};const R0=med(rs),G0=med(gs),B0=med(bs);
+  if(Math.min(R0,G0,B0)>=245||Math.max(R0,G0,B0)<60){res(url);return;}   /* 이미 흰색이거나 너무 어두우면 그대로 */
+  /* 2) 바탕색과 비슷한 픽셀 찾기 */
+  const T=20,cand=new Uint8Array(N);
+  for(let i=0;i<N;i++){const r=p[i*4],g=p[i*4+1],b=p[i*4+2];
+   if(Math.abs(r-R0)<=T&&Math.abs(g-G0)<=T&&Math.abs(b-B0)<=T)cand[i]=1;}
+  /* 3) 덩어리로 묶어서 작은 덩어리(제품 위 얼룩)는 제외 */
+  const mask=new Uint8Array(N),seen=new Uint8Array(N),st=new Int32Array(N),minA=Math.max(60,N*0.002);
+  for(let s=0;s<N;s++){if(!cand[s]||seen[s])continue;let top=0,list=[];st[top++]=s;seen[s]=1;
+   while(top){const i=st[--top];list.push(i);const x=i%W,y=(i-x)/W;
+    if(x>0&&cand[i-1]&&!seen[i-1]){seen[i-1]=1;st[top++]=i-1;}
+    if(x<W-1&&cand[i+1]&&!seen[i+1]){seen[i+1]=1;st[top++]=i+1;}
+    if(y>0&&cand[i-W]&&!seen[i-W]){seen[i-W]=1;st[top++]=i-W;}
+    if(y<H-1&&cand[i+W]&&!seen[i+W]){seen[i+W]=1;st[top++]=i+W;}}
+   if(list.length>=minA)for(const i of list)mask[i]=1;}
+  /* 4) 바탕은 흰색, 경계 2픽셀은 부드럽게 밝게 */
+  const ring=new Uint8Array(N);
+  for(let i=0;i<N;i++){if(!mask[i])continue;const x=i%W,y=(i-x)/W;
+   for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const j=yy*W+xx;if(!mask[j])ring[j]=1;}}
+  for(let i=0;i<N;i++){const o=i*4;
+   if(mask[i]){p[o]=p[o+1]=p[o+2]=255;continue;}
+   if(ring[i]){const d=Math.max(Math.abs(p[o]-R0),Math.abs(p[o+1]-G0),Math.abs(p[o+2]-B0));const w=Math.max(0,1-d/60);
+    p[o]=Math.min(255,p[o]+(255-R0)*w);p[o+1]=Math.min(255,p[o+1]+(255-G0)*w);p[o+2]=Math.min(255,p[o+2]+(255-B0)*w);}}
+  cx.putImageData(id,0,0);res(cv.toDataURL('image/png'));
+ }catch(e){res(url);}};   /* 다른 사이트 주소 사진이라 읽을 수 없으면 원본 그대로 */
+ im.onerror=()=>res(url);im.src=url;});}
+const imgLoaded=im=>im.complete&&im.naturalWidth?Promise.resolve():new Promise(r=>{im.onload=im.onerror=()=>r();});
 $('bPng').onclick=async()=>{
  if(!window.html2canvas){$('msg').textContent='이미지 변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return;}
  $('msg').textContent='이미지를 만드는 중입니다...';
  try{await document.fonts.ready;}catch(x){}
- $('paper').classList.add('exporting');let c;try{c=await html2canvas($('paper'),{scale:1,useCORS:true,backgroundColor:'#ffffff'});}finally{$('paper').classList.remove('exporting');}
+ const swaps=[];
+ if($('dcWhite').checked){for(const im of document.querySelectorAll('#paper img[data-dc]')){const o=im.getAttribute('src');const w=await whitenBg(o);if(w!==o){swaps.push([im,o]);im.src=w;}}
+  await Promise.all(swaps.map(s=>imgLoaded(s[0])));}
+ $('paper').classList.add('exporting');let c;try{c=await html2canvas($('paper'),{scale:1,useCORS:true,backgroundColor:'#ffffff'});}finally{$('paper').classList.remove('exporting');for(const [im,o] of swaps)im.src=o;}
  const a=document.createElement('a');a.download=(S.name||'상세페이지')+'.png';a.href=c.toDataURL('image/png');a.click();
  $('msg').textContent='PNG를 내려받았습니다. (긴 세로 이미지 1장)';
 };
