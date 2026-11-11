@@ -56,6 +56,7 @@ input[type=range]{width:100%}
 #msg{font-size:15px;color:#1f6f3f;min-height:22px}
 #paper.pick{cursor:crosshair;outline:4px solid #c92a2a}
 #paper.pick [data-bi]{outline:4px dashed #c92a2a;outline-offset:-4px}
+#paper.exporting [data-dot],#paper.exporting [data-end]{display:none}
 #pickbar{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#c92a2a;color:#fff;padding:12px 18px;border-radius:12px;z-index:99;font-size:18px;box-shadow:0 3px 12px #0006;align-items:center;gap:12px}
 #pickbar button{background:#fff;color:#c92a2a;font-weight:bold}
 @media(max-width:900px){.wrap{flex-direction:column}.left{width:100%}}
@@ -166,7 +167,7 @@ function sideUI(b,i,k,name){
   <select data-f="${k}V" data-i="${i}"><option value="" ${!b[k+'V']?'selected':''}>중간</option><option value="top" ${b[k+'V']==='top'?'selected':''}>위</option><option value="bot" ${b[k+'V']==='bot'?'selected':''}>아래</option></select>
   <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
-  ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>`:''}</div>`;
+  ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>${b[k+'Ex']!==undefined&&b[k+'Ex']!==''&&b[k+'Ex']!==null?` <button class="sm" data-eauto="${i}" data-side="${k}" style="margin-top:6px;background:#dde8fb;color:#1f5fbf">끝점 자동(동그라미 가리키기)으로 되돌리기</button>`:''}<div class="hint">완성본에서 빨간 점(출발)과 파란 점(끝)을 마우스로 끌어 옮길 수 있습니다.</div>`:''}</div>`;
 }
 function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
@@ -270,12 +271,15 @@ const geo=d=>{
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
     const cx=x0+pos[k]+g.dw/2,r=g.dw/2,hh=cH(q[1])/2,cy=d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2,tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
-    const dx=cx-tx,dy=cy-ty,len=Math.hypot(dx,dy),av=len-r-4;if(av<14)return;   /* 출발점이 동그라미 밑에 가려진 경우만 생략 */
-    const hs=Math.min(hs0,av*.7);   /* 가까우면 화살촉을 줄여서라도 그림 */
-    const ux=dx/len,uy=dy/len,ex=cx-ux*(r+4),ey=cy-uy*(r+4),bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
+    const hasE=d[k+'Ex']!==undefined&&d[k+'Ex']!==''&&d[k+'Ex']!==null;   /* 끝점을 직접 옮겼는지 */
+    let ux,uy,ex,ey,hs;
+    if(hasE){ex=+d[k+'Ex']*Wp;ey=+d[k+'Ey']*H;const dx=ex-tx,dy=ey-ty,len=Math.hypot(dx,dy);if(len<20)return;ux=dx/len;uy=dy/len;hs=Math.min(hs0,len*.5);}
+    else{const dx=cx-tx,dy=cy-ty,len=Math.hypot(dx,dy),av=len-r-4;if(av<14)return;   /* 출발점이 동그라미 밑에 가려진 경우만 생략 */
+     hs=Math.min(hs0,av*.7);ux=dx/len;uy=dy/len;ex=cx-ux*(r+4);ey=cy-uy*(r+4);}
+    const bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
     const dk='#'+[1,3,5].map(i=>Math.round(parseInt((col+'').slice(i,i+2)||'0',16)*.55).toString(16).padStart(2,'0')).join('');
     const hp=`${f(ex)},${f(ey)} ${f(ex-ux*hs+px*hs*.5)},${f(ey-uy*hs+py*hs*.5)} ${f(ex-ux*hs-px*hs*.5)},${f(ey-uy*hs-py*hs*.5)}`;
-    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle cx="${f(tx)}" cy="${f(ty)}" r="7" fill="#fff" stroke="#c92a2a" stroke-width="4"/>`);
+    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="11" fill="#fff" stroke="#c92a2a" stroke-width="5" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="11" fill="#fff" stroke="#1f5fbf" stroke-width="5" style="pointer-events:all;cursor:grab"/>`);
    });
    return sv?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="position:absolute;left:0;top:40px;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;z-index:3;">${sv}</svg>`:'';
   };
@@ -337,6 +341,12 @@ document.addEventListener('change',e=>{
  }
 });
 document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('blk'))S.blocks[+d.dataset.i].open=d.open;},true);
+/* 빨간 점을 마우스로 끌어서 출발점 옮기기 (미리보기 전용) */
+let DRAG=null;
+const dotMove=(x,y)=>{if(DRAG.end){const c=document.querySelector('#paper [data-end="'+DRAG.i+'"][data-side="'+DRAG.k+'"]');if(!c)return;const sv=c.ownerSVGElement,m=sv.getScreenCTM().inverse(),pt=sv.createSVGPoint();pt.x=x;pt.y=y;const q=pt.matrixTransform(m),vb=sv.viewBox.baseVal,b=S.blocks[DRAG.i],cl=v=>+Math.min(1.2,Math.max(-.2,v)).toFixed(4);b[DRAG.k+'Ex']=cl(q.x/vb.width);b[DRAG.k+'Ey']=cl(q.y/vb.height);drawRight();return;}const bi=document.querySelector('#paper [data-bi="'+DRAG.i+'"]');if(!bi)return;const r=bi.getBoundingClientRect(),b=S.blocks[DRAG.i],cl=v=>+Math.min(1,Math.max(0,v)).toFixed(3);b[DRAG.k+'Ax']=cl((x-r.left)/r.width);b[DRAG.k+'Ay']=cl((y-r.top)/r.height);drawRight();};
+document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#paper [data-dot],#paper [data-end]');if(!c)return;e.preventDefault();DRAG=c.dataset.end!==undefined?{i:+c.dataset.end,k:c.dataset.side,end:true}:{i:+c.dataset.dot,k:c.dataset.side};document.body.style.cursor='grabbing';});
+document.addEventListener('pointermove',e=>{if(!DRAG)return;e.preventDefault();dotMove(e.clientX,e.clientY);});
+document.addEventListener('pointerup',e=>{if(!DRAG)return;dotMove(e.clientX,e.clientY);const wasEnd=DRAG.end;DRAG=null;if(wasEnd)drawLeft();document.body.style.cursor='';$('msg').style.color='#1f6f3f';$('msg').textContent=(wasEnd?'끝점(파란 점)':'출발점(빨간 점)')+'을 옮겼습니다.';});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&PICK)endPick();});
 document.addEventListener('click',e=>{
  if(PICK&&!e.target.closest('#pickbar')){
@@ -350,6 +360,7 @@ document.addEventListener('click',e=>{
  if(nmEl){const i=+nmEl.parentNode.dataset.o;S.blocks[i].open=true;drawLeft();const el=$('blk'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return;}
  const t=e.target.closest('button');if(!t)return;
  const d=t.dataset;
+ if(d.eauto!==undefined){const b=S.blocks[+d.eauto];b[d.side+'Ex']=undefined;b[d.side+'Ey']=undefined;drawLeft();drawRight();return;}
  if(d.pickx){endPick();return;}
  if(d.pick!==undefined){const el=document.querySelector('#paper [data-bi="'+d.pick+'"]');if(!el){$('msg').textContent='화살표를 넣으려면 기준 이미지와 디테일 사진이 먼저 들어 있어야 합니다.';return;}PICK={i:+d.pick,k:d.side};$('paper').classList.add('pick');$('pickbar').style.display='flex';el.scrollIntoView({behavior:'smooth',block:'center'});return;}
  if(d.up!==undefined){const i=+d.up;if(i>0){[S.blocks[i-1],S.blocks[i]]=[S.blocks[i],S.blocks[i-1]];all();}}
@@ -359,7 +370,7 @@ document.addEventListener('click',e=>{
   if(!b||!confirm('"'+nm(b)+'" 항목의 사진과 글을 모두 비우고 처음 상태로 되돌릴까요?\n(항목 이름과 순서는 그대로 남습니다)'))return;
   const keep={id:b.id,type:b.type,label:b.label,open:true};
   const blank=b.type==='detail'
-   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined,lV:'',rV:''}
+   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,lEx:undefined,lEy:undefined,rEx:undefined,rEy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined,lV:'',rV:''}
    :{photo:'',url:'',title:'',text:''};
   S.blocks[i]=Object.assign(keep,blank);
   all();
@@ -377,7 +388,7 @@ $('bHtml').onclick=async()=>{
 $('bPng').onclick=async()=>{
  if(!window.html2canvas){$('msg').textContent='이미지 변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return;}
  $('msg').textContent='이미지를 만드는 중입니다...';
- const c=await html2canvas($('paper'),{scale:1,useCORS:true,backgroundColor:'#ffffff'});
+ $('paper').classList.add('exporting');let c;try{c=await html2canvas($('paper'),{scale:1,useCORS:true,backgroundColor:'#ffffff'});}finally{$('paper').classList.remove('exporting');}
  const a=document.createElement('a');a.download=(S.name||'상세페이지')+'.png';a.href=c.toDataURL('image/png');a.click();
  $('msg').textContent='PNG를 내려받았습니다. (긴 세로 이미지 1장)';
 };
