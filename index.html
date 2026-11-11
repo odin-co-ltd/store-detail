@@ -162,6 +162,8 @@ function sideUI(b,i,k,name){
   <input type="file" accept="image/*" data-file="${i}" data-slot="${k}Photo">
   ${ph?`<img class="thumb" src="${ph}">`:''}
   <label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
+  <label>${name} 동그라미 세로 위치 (기준 사진 기준)</label>
+  <select data-f="${k}V" data-i="${i}"><option value="" ${!b[k+'V']?'selected':''}>중간</option><option value="top" ${b[k+'V']==='top'?'selected':''}>위</option><option value="bot" ${b[k+'V']==='bot'?'selected':''}>아래</option></select>
   <label>${name} 설명 글</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
   ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>`:''}</div>`;
@@ -251,8 +253,8 @@ const geo=d=>{
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false;
   const mg=()=>{const m=first?0:g.gap;first=false;return len(m);};
-  const circ=(u,t)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:middle;width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
-  const items=(L?circ(L,d.lText):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText):'');
+  const circ=(u,t,v)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg()};"><img src="${esc(u)}" style="width:100%;display:block;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const items=(L?circ(L,d.lText,d.lV):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg()};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText,d.rV):'');
   const arrows=()=>{
    if(!B)return '';
    const sides=[];if(L&&d.lArr)sides.push(['l',L]);if(R&&d.rArr)sides.push(['r',R]);
@@ -266,7 +268,7 @@ const geo=d=>{
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
-    const cx=x0+pos[k]+g.dw/2,cy=H/2,r=g.dw/2,tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
+    const cx=x0+pos[k]+g.dw/2,r=g.dw/2,hh=cH(q[1])/2,cy=d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2,tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
     const dx=cx-tx,dy=cy-ty,len=Math.hypot(dx,dy);if(len<r+hs+16)return;
     const ux=dx/len,uy=dy/len,ex=cx-ux*(r+4),ey=cy-uy*(r+4),bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
     const dk='#'+[1,3,5].map(i=>Math.round(parseInt((col+'').slice(i,i+2)||'0',16)*.55).toString(16).padStart(2,'0')).join('');
@@ -353,7 +355,7 @@ document.addEventListener('click',e=>{
   if(!b||!confirm('"'+nm(b)+'" 항목의 사진과 글을 모두 비우고 처음 상태로 되돌릴까요?\n(항목 이름과 순서는 그대로 남습니다)'))return;
   const keep={id:b.id,type:b.type,label:b.label,open:true};
   const blank=b.type==='detail'
-   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined}
+   ?{photo:'',url:'',title:'',text:'',base:'',lPhoto:'',lUrl:'',lText:'',rPhoto:'',rUrl:'',rText:'',round:true,hideBase:true,lArr:false,rArr:false,lAx:undefined,lAy:undefined,rAx:undefined,rAy:undefined,ac:undefined,aw:undefined,bc:undefined,sh:undefined,lV:'',rV:''}
    :{photo:'',url:'',title:'',text:''};
   S.blocks[i]=Object.assign(keep,blank);
   all();
