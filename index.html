@@ -90,6 +90,14 @@ input[type=range]{width:100%}
     <div class="trow"><label class="chk"><input type="checkbox" id="nbold" checked> 굵은 글씨</label>
      <span class="clr">글자 색상 <input type="color" id="ncolor" value="#222222"></span></div>
    </div>
+   <div class="tune">
+    <div class="trow"><span>사진 아래 제목 글자 크기</span><b id="tsv">38px</b></div>
+    <input type="range" id="tsize" min="16" max="60" value="38">
+    <div class="trow"><span>사진 아래 설명 글자 크기</span><b id="xsv">28px</b></div>
+    <input type="range" id="xsize" min="14" max="44" value="28">
+    <div class="trow"><span>디테일 동그라미 설명 글자 크기</span><b id="csv">28px</b></div>
+    <input type="range" id="csize" min="14" max="44" value="28">
+   </div>
    <label>한 줄 소개 (없으면 비워 두세요)</label><input type="text" id="sub" value="">
   </div>
 
@@ -145,7 +153,7 @@ const preload=us=>Promise.all(us.filter(Boolean).map(u=>new Promise(r=>{if(AR[u]
 let PICK=null;
 function endPick(){PICK=null;$('paper').classList.remove('pick');$('pickbar').style.display='none';}
 let S={
- nameSize:42,nameBold:true,nameColor:'#222222',
+ nameSize:42,nameBold:true,nameColor:'#222222',titleSize:38,textSize:28,capSize:28,
  blocks:[
   {id:uid++,type:'angle',label:'정면',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'정면 15°',photo:'',url:'',title:'',text:'',open:false},
@@ -279,7 +287,7 @@ const geo=d=>{
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false;
   const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
-  const circ=(u,t,v,k)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:20px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
+  const circ=(u,t,v,k)=>{if(t)cap=true;return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${t?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;font-size:${+S.capSize||28}px;font-weight:700;line-height:1.4;color:#222;">${nl(t)}</div>`:''}</div>`;};
   const items=(L?circ(L,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rText,d.rV,'r'):'');
   const arrows=()=>{
    if(!B)return '';
@@ -308,9 +316,9 @@ const geo=d=>{
    /* 이미지 저장 프로그램이 svg의 위치(top)를 두 번 적용해 화살표가 40px 내려가던 문제 → 위치는 바깥 칸이 맡고 svg는 그 안에 그대로 */
    return sv?`<div style="position:absolute;left:0;top:40px;${forExport?'width:100%;':'width:'+Wp+'px;'}pointer-events:none;z-index:3;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="display:block;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;">${sv}</svg></div>`:'';
   };
-  return `<div style="position:relative;padding:40px 0 ${cap?80:20}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
+  return `<div style="position:relative;padding:40px 0 ${cap?Math.round((+S.capSize||28)*1.4*2+28):20}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
  };
- const capB=b=>(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:center;">${b.title?`<div style="font-size:24px;font-weight:700;margin-bottom:8px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:19px;line-height:1.7;color:#555;">${nl(b.text)}</div>`:''}</div>`:'';
+ const capB=b=>(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:center;">${b.title?`<div style="font-size:${+S.titleSize||38}px;font-weight:700;line-height:1.3;margin-bottom:${Math.round((+S.titleSize||38)*.45)}px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:${+S.textSize||28}px;line-height:1.45;color:#555;">${nl(b.text)}</div>`:''}</div>`:'';
  const baseOf=new Map();
  S.blocks.forEach(d=>{if(usedD(d)&&d.base&&d.hideBase!==false&&baseSrc(d)){const k=String(d.base);if(!baseOf.has(k))baseOf.set(k,[]);baseOf.get(k).push(d);}});
  const moved=new Set();baseOf.forEach(a=>a.forEach(d=>moved.add(d.id)));
@@ -356,6 +364,9 @@ document.addEventListener('input',e=>{
  if(t.id==='msize'){S.matchSize=t.checked;drawRight();return;}
  if(t.id==='pscale'){S.prodScale=+t.value;$('psv').textContent=t.value+'%';drawRight();return;}
  if(t.id==='nsize'){S.nameSize=+t.value;$('nsv').textContent=t.value+'px';drawRight();return;}
+ if(t.id==='tsize'){S.titleSize=+t.value;$('tsv').textContent=t.value+'px';drawRight();return;}
+ if(t.id==='xsize'){S.textSize=+t.value;$('xsv').textContent=t.value+'px';drawRight();return;}
+ if(t.id==='csize'){S.capSize=+t.value;$('csv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='nfont'){S.font=t.value;drawRight();return;}
  if(t.id==='nls'){S.nameLs=+t.value;$('nlsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
@@ -429,7 +440,7 @@ $('bPng').onclick=async()=>{
 $('bSave').onclick=()=>{
  const a=document.createElement('a');
  a.download=(S.name||'작업')+'_작업파일.json';
- a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,nameBold:S.nameBold,nameColor:S.nameColor,nameLs:S.nameLs,font:S.font,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,titleSize:S.titleSize,textSize:S.textSize,capSize:S.capSize,nameBold:S.nameBold,nameColor:S.nameColor,nameLs:S.nameLs,font:S.font,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
 };
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
@@ -437,7 +448,7 @@ $('fLoad').onchange=e=>{
  fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('tsize').value=S.titleSize||38;$('tsv').textContent=(S.titleSize||38)+'px';$('xsize').value=S.textSize||28;$('xsv').textContent=(S.textSize||28)+'px';$('csize').value=S.capSize||28;$('csv').textContent=(S.capSize||28)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
