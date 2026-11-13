@@ -97,8 +97,8 @@ input[type=range]{width:100%}
     <input type="range" id="xsize" min="14" max="44" value="28">
     <div class="trow"><span>디테일 제목 글자 크기</span><b id="csv">28px</b></div>
     <input type="range" id="csize" min="14" max="44" value="28">
-    <div class="trow"><span>디테일 설명 글자 크기</span><b id="dsv">22px</b></div>
-    <input type="range" id="dsize" min="12" max="40" value="22">
+    <div class="trow"><span>디테일 설명 글자 크기</span><b id="dsv">28px</b></div>
+    <input type="range" id="dsize" min="16" max="50" value="28">
    </div>
    <label>한 줄 소개 (없으면 비워 두세요)</label><input type="text" id="sub" value="">
   </div>
@@ -155,7 +155,7 @@ const preload=us=>Promise.all(us.filter(Boolean).map(u=>new Promise(r=>{if(AR[u]
 let PICK=null;
 function endPick(){PICK=null;$('paper').classList.remove('pick');$('pickbar').style.display='none';}
 let S={
- nameSize:42,nameBold:true,nameColor:'#222222',titleSize:38,textSize:28,capSize:28,capDescSize:22,
+ nameSize:42,nameBold:true,nameColor:'#222222',titleSize:38,textSize:28,capSize:28,capDescSize:28,
  blocks:[
   {id:uid++,type:'angle',label:'정면',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'정면 15°',photo:'',url:'',title:'',text:'',open:false},
@@ -291,9 +291,9 @@ const geo=d=>{
   let first=true,cap=false,capH=0;
   const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
   const circ=(u,ti,t,v,k)=>{const db=!!d[k+'DescBold'];
-   const cs=+S.capSize||28,ds=+S.capDescSize||22,lines=s=>s?String(s).split('\n').length:0;
-   if(ti||t){cap=true;capH=Math.max(capH,lines(ti)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t),ti?1:2)*ds*1.5:0));}
-   const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
+   const cs=+S.capSize||28,ds=+S.capDescSize||28,cw=g.dw*1.2,lines=(s,fz)=>s?String(s).split('\n').reduce((a,l)=>a+Math.max(1,Math.ceil(l.length*fz*0.95/cw)),0):0;
+   if(ti||t){cap=true;capH=Math.max(capH,lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0));}
+   const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;white-space:normal;word-break:keep-all;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
    return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
   const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
   const arrows=()=>{
@@ -453,10 +453,10 @@ $('bSave').onclick=()=>{
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
  const f=e.target.files[0];if(!f)return;const fr=new FileReader();
- fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
+ fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!o.capDescSize||[22,26,30].includes(+o.capDescSize))o.capDescSize=28;if(!o.capSize)o.capSize=28;Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('tsize').value=S.titleSize||38;$('tsv').textContent=(S.titleSize||38)+'px';$('xsize').value=S.textSize||28;$('xsv').textContent=(S.textSize||28)+'px';$('csize').value=S.capSize||28;$('csv').textContent=(S.capSize||28)+'px';$('dsize').value=S.capDescSize||22;$('dsv').textContent=(S.capDescSize||22)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('tsize').value=S.titleSize||38;$('tsv').textContent=(S.titleSize||38)+'px';$('xsize').value=S.textSize||28;$('xsv').textContent=(S.textSize||28)+'px';$('csize').value=S.capSize||28;$('csv').textContent=(S.capSize||28)+'px';$('dsize').value=S.capDescSize||28;$('dsv').textContent=(S.capDescSize||28)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
