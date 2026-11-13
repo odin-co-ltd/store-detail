@@ -199,7 +199,9 @@ function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
  return `<label>가운데 기준 이미지</label>
   <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
-  ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}${moreBox(b,i,'moreOpen','인터넷 주소 (필요할 때 펼치기)',!!b.url,`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`)}`}
+  ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}${moreBox(b,i,'moreOpen','인터넷 주소 · 제목 · 설명 (필요할 때 펼치기)',!!(b.url||b.title||b.text),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">
+   <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
+   <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`)}`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
   <div class="side"><b>크기와 간격 (px)</b>
    <label>가운데 기준 이미지 폭 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
@@ -335,7 +337,7 @@ const geo=d=>{
    if(!usedD(b)){   /* 동그라미 없이 가운데 사진만 직접 올린 경우: 사진 한 장으로 보여줌 */
     const im=(!b.base)?pimg(b):'';if(!im&&!b.title&&!b.text)return;
     out.push(`<div style="padding:40px 0 10px;">${im}${capB(b)}</div>`);return;}
-   out.push(compD(b));return;}
+   out.push(compD(b));if(!b.base&&(b.title||b.text))out.push(`<div style="padding-bottom:10px;">${capB(b)}</div>`);return;}
   const im=pimg(b),has=!!im;
   if(b.type==='main'){ if(has)out.push(`<div>${im}</div>`); }
   else if(b.type==='angle'){
