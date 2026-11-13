@@ -99,7 +99,6 @@ input[type=range]{width:100%}
     <input type="range" id="csize" min="14" max="44" value="28">
     <div class="trow"><span>디테일 설명 글자 크기</span><b id="dsv">22px</b></div>
     <input type="range" id="dsize" min="12" max="40" value="22">
-    <div class="trow"><label class="chk"><input type="checkbox" id="dbold"> 디테일 설명도 굵은 글씨로</label></div>
    </div>
    <label>한 줄 소개 (없으면 비워 두세요)</label><input type="text" id="sub" value="">
   </div>
@@ -156,7 +155,7 @@ const preload=us=>Promise.all(us.filter(Boolean).map(u=>new Promise(r=>{if(AR[u]
 let PICK=null;
 function endPick(){PICK=null;$('paper').classList.remove('pick');$('pickbar').style.display='none';}
 let S={
- nameSize:42,nameBold:true,nameColor:'#222222',titleSize:38,textSize:28,capSize:28,capDescSize:22,capDescBold:false,
+ nameSize:42,nameBold:true,nameColor:'#222222',titleSize:38,textSize:28,capSize:28,capDescSize:22,
  blocks:[
   {id:uid++,type:'angle',label:'정면',photo:'',url:'',title:'',text:'',open:false},
   {id:uid++,type:'angle',label:'정면 15°',photo:'',url:'',title:'',text:'',open:false},
@@ -192,7 +191,7 @@ function sideUI(b,i,k,name){
   <select data-f="${k}V" data-i="${i}"><option value="" ${!b[k+'V']?'selected':''}>중간</option><option value="top" ${b[k+'V']==='top'?'selected':''}>위</option><option value="bot" ${b[k+'V']==='bot'?'selected':''}>아래</option></select>
   ${moreBox(b,i,k+'MoreOpen','인터넷 주소 · 제목 · 설명 글 (필요할 때 펼치기)',!!(ur||tx||ti),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
   <label>${name} 제목 (굵은 글씨)</label><input type="text" data-f="${k}Title" data-i="${i}" value="${esc(ti)}">
-  <label>${name} 설명 글 (보통 글씨)</label><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>`)}
+  <div style="display:flex;align-items:center;gap:10px;margin:8px 0 3px"><label style="margin:0">${name} 설명 글</label><label class="chk" style="font-size:16px;font-weight:700"><input type="checkbox" data-f="${k}DescBold" data-i="${i}" ${b[k+'DescBold']?'checked':''}> 굵게</label></div><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>`)}
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
   ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>${b[k+'Ex']!==undefined&&b[k+'Ex']!==''&&b[k+'Ex']!==null?` <button class="sm" data-eauto="${i}" data-side="${k}" style="margin-top:6px;background:#dde8fb;color:#1f5fbf">끝점 자동(동그라미 가리키기)으로 되돌리기</button>`:''}<div class="hint">완성본에서 빨간 점(출발)과 파란 점(끝)을 마우스로 끌어 옮길 수 있습니다.</div>`:''}</div>`;
 }
@@ -291,10 +290,10 @@ const geo=d=>{
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false,capH=0;
   const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
-  const circ=(u,ti,t,v,k)=>{
+  const circ=(u,ti,t,v,k)=>{const db=!!d[k+'DescBold'];
    const cs=+S.capSize||28,ds=+S.capDescSize||22,lines=s=>s?String(s).split('\n').length:0;
    if(ti||t){cap=true;capH=Math.max(capH,lines(ti)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t),ti?1:2)*ds*1.5:0));}
-   const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${S.capDescBold?700:400};line-height:1.5;color:${S.capDescBold?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
+   const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
    return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
   const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
   const arrows=()=>{
@@ -375,7 +374,6 @@ document.addEventListener('input',e=>{
  if(t.id==='tsize'){S.titleSize=+t.value;$('tsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='xsize'){S.textSize=+t.value;$('xsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='csize'){S.capSize=+t.value;$('csv').textContent=t.value+'px';drawRight();return;}
- if(t.id==='dbold'){S.capDescBold=t.checked;drawRight();return;}
  if(t.id==='dsize'){S.capDescSize=+t.value;$('dsv').textContent=t.value+'px';drawRight();return;}
  if(t.id==='nfont'){S.font=t.value;drawRight();return;}
  if(t.id==='nls'){S.nameLs=+t.value;$('nlsv').textContent=t.value+'px';drawRight();return;}
@@ -450,7 +448,7 @@ $('bPng').onclick=async()=>{
 $('bSave').onclick=()=>{
  const a=document.createElement('a');
  a.download=(S.name||'작업')+'_작업파일.json';
- a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,titleSize:S.titleSize,textSize:S.textSize,capSize:S.capSize,capDescSize:S.capDescSize,capDescBold:S.capDescBold,nameBold:S.nameBold,nameColor:S.nameColor,nameLs:S.nameLs,font:S.font,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
+ a.href=URL.createObjectURL(new Blob([JSON.stringify({matchSize:S.matchSize,prodScale:S.prodScale,nameSize:S.nameSize,titleSize:S.titleSize,textSize:S.textSize,capSize:S.capSize,capDescSize:S.capDescSize,nameBold:S.nameBold,nameColor:S.nameColor,nameLs:S.nameLs,font:S.font,name:S.name,sub:S.sub,blocks:S.blocks})],{type:'application/json'}));a.click();
 };
 $('bLoad').onclick=()=>$('fLoad').click();
 $('fLoad').onchange=e=>{
@@ -458,7 +456,7 @@ $('fLoad').onchange=e=>{
  fr.onload=()=>{try{const o=JSON.parse(fr.result);Object.assign(S,o);S.blocks=(S.blocks||[]).filter(b=>b.type!=='info');S.blocks.forEach(b=>{if(!b.id)b.id=uid++;});uid=Math.max(uid,...S.blocks.map(b=>+b.id||0))+1;$('name').value=S.name||'';syncName();$('sub').value=S.sub||'';all();}catch(x){alert('작업 파일을 읽지 못했습니다.');}};
  fr.readAsText(f);
 };
-function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('tsize').value=S.titleSize||38;$('tsv').textContent=(S.titleSize||38)+'px';$('xsize').value=S.textSize||28;$('xsv').textContent=(S.textSize||28)+'px';$('csize').value=S.capSize||28;$('csv').textContent=(S.capSize||28)+'px';$('dsize').value=S.capDescSize||22;$('dbold').checked=!!S.capDescBold;$('dsv').textContent=(S.capDescSize||22)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
+function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.prodScale||100;$('psv').textContent=(S.prodScale||100)+'%';$('nsize').value=S.nameSize||42;$('nsv').textContent=(S.nameSize||42)+'px';$('tsize').value=S.titleSize||38;$('tsv').textContent=(S.titleSize||38)+'px';$('xsize').value=S.textSize||28;$('xsv').textContent=(S.textSize||28)+'px';$('csize').value=S.capSize||28;$('csv').textContent=(S.capSize||28)+'px';$('dsize').value=S.capDescSize||22;$('dsv').textContent=(S.capDescSize||22)+'px';$('nfont').value=S.font||'noto';$('nls').value=S.nameLs===undefined?3:S.nameLs;$('nlsv').textContent=(S.nameLs===undefined?3:S.nameLs)+'px';$('nbold').checked=S.nameBold!==false;$('ncolor').value=S.nameColor||'#222222';}
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 </script>
