@@ -290,11 +290,11 @@ const geo=d=>{
  const compD=d=>{
   const L=src(d.lPhoto,d.lUrl),R=src(d.rPhoto,d.rUrl),B=baseSrc(d),g=geo(d),round=d.round!==false,z=g.z;
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
-  let first=true,cap=false,capH=0;
+  let first=true,cap=false,capH=0;const capN=[];
   const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
   const circ=(u,ti,t,v,k)=>{const db=!!d[k+'DescBold'];
    const cs=+S.capSize||28,ds=+S.capDescSize||27,cw=g.dw*1.2,lines=(s,fz)=>s?String(s).split('\n').reduce((a,l)=>a+Math.max(1,Math.ceil(l.length*fz*0.95/cw)),0):0;
-   if(ti||t){cap=true;capH=Math.max(capH,lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0));}
+   if(ti||t){cap=true;const hs=lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0);capH=Math.max(capH,hs);capN.push({v,hs});}
    const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;white-space:normal;word-break:keep-all;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
    return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
   const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
@@ -325,7 +325,7 @@ const geo=d=>{
    /* 이미지 저장 프로그램이 svg의 위치(top)를 두 번 적용해 화살표가 40px 내려가던 문제 → 위치는 바깥 칸이 맡고 svg는 그 안에 그대로 */
    return sv?`<div style="position:absolute;left:0;top:40px;${forExport?'width:100%;':'width:'+Wp+'px;'}pointer-events:none;z-index:3;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="display:block;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;">${sv}</svg></div>`:'';
   };
-  return `<div style="position:relative;padding:40px 0 ${cap?Math.round(capH+28):20}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
+  return `<div style="position:relative;padding:40px 0 ${(()=>{if(!cap)return 20;const bh=B?g.bw*g.z*arOf(B,.75):0,rowH=Math.max(bh,g.dw);let need=0;capN.forEach(c=>{const cb=c.v==='top'?g.dw:c.v==='bot'?rowH:(rowH+g.dw)/2;need=Math.max(need,cb+10+c.hs-rowH);});return Math.round(Math.max(20,need+20));})()}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
  };
  const capB=b=>(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:center;">${b.title?`<div style="font-size:${+S.titleSize||38}px;font-weight:700;line-height:1.3;margin-bottom:${Math.round((+S.titleSize||38)*.45)}px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:${+S.textSize||28}px;line-height:1.45;color:#555;">${nl(b.text)}</div>`:''}</div>`:'';
  const baseOf=new Map();
