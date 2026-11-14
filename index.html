@@ -17,7 +17,9 @@ button.sm{padding:6px 10px;font-size:15px}
 button.del{background:#f6d8d8;color:#900}
 .wrap{display:flex;gap:18px;padding:18px;align-items:flex-start}
 .left{width:430px;flex:none}
-.right{flex:1;min-width:0}
+.right{flex:1;min-width:0;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;scroll-behavior:smooth}
+#paper .flash{outline:4px solid #f0a020;outline-offset:-4px}
+#followBar{position:sticky;top:0;z-index:5;background:#fff8e6;border:1px solid #f0d090;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:15px}
 .card{background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
 .card h3{margin:0 0 10px;font-size:19px}
 label{display:block;font-size:15px;color:#555;margin:8px 0 3px}
@@ -65,7 +67,7 @@ input[type=range]{width:100%}
 #paper.exporting [data-dot],#paper.exporting [data-end]{display:none}
 #pickbar{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#c92a2a;color:#fff;padding:12px 18px;border-radius:12px;z-index:99;font-size:18px;box-shadow:0 3px 12px #0006;align-items:center;gap:12px}
 #pickbar button{background:#fff;color:#c92a2a;font-weight:bold}
-@media(max-width:900px){.wrap{flex-direction:column}.left{width:100%}}
+@media(max-width:900px){.wrap{flex-direction:column}.left{width:100%}.right{position:static;max-height:none;overflow:visible}}
 </style>
 </head>
 <body>
@@ -136,6 +138,7 @@ input[type=range]{width:100%}
    <div class="hint">HTML 복사는 사진의 인터넷 주소(https://)가 있어야 그림이 나옵니다. 각 사진 칸 아래 "인터넷 주소" 칸에 넣어 주세요. 주소가 없으면 PNG로 내려받아 카페24에 올리시면 됩니다.</div>
    <div id="msg"></div>
   </div>
+  <div id="followBar"><label class="chk"><input type="checkbox" id="follow" checked> 편집하는 칸을 미리보기에서 자동으로 따라가기</label></div>
   <div id="paper"></div>
  <div id="pickbar"><span>오른쪽 완성본에서 화살표가 출발할 곳(점선 칸 안)을 눌러 주세요</span><button data-pickx="1">취소</button></div>
  </div>
@@ -332,6 +335,7 @@ const geo=d=>{
  S.blocks.forEach(d=>{if(usedD(d)&&d.base&&d.hideBase!==false&&baseSrc(d)){const k=String(d.base);if(!baseOf.has(k))baseOf.set(k,[]);baseOf.get(k).push(d);}});
  const moved=new Set();baseOf.forEach(a=>a.forEach(d=>moved.add(d.id)));
  S.blocks.forEach(b=>{
+  if(!forExport){out.push(`<i data-mk="${b.id}" style="display:block;height:0"></i>`);if(baseOf.has(String(b.id)))baseOf.get(String(b.id)).forEach(d=>out.push(`<i data-mk="${d.id}" style="display:block;height:0"></i>`));}
   if(baseOf.has(String(b.id))){baseOf.get(String(b.id)).forEach(d=>out.push(compD(d)));if(b.title||b.text)out.push(`<div style="padding-bottom:10px;">${capB(b)}</div>`);return;}
   if(b.type==='detail'){if(moved.has(b.id))return;
    if(!usedD(b)){   /* 동그라미 없이 가운데 사진만 직접 올린 경우: 사진 한 장으로 보여줌 */
@@ -439,7 +443,31 @@ $('bHtml').onclick=async()=>{
 };
 
 /* 디테일 동그라미 사진의 회색 바탕을 흰색으로 바꾼 사본 만들기 (이미지 저장 때만 사용) */
-$('bPng').onclick=async()=>{
+/* 편집하는 항목 → 미리보기에서 같은 부분으로 이동 */
+let FOL={i:-1,t:0};
+function followTo(i,flash){
+ if(!$('follow').checked||i<0||!S.blocks[i])return;
+ const b=S.blocks[i],R=document.querySelector('.right');
+ let id=b.id;
+ if(b.type==='detail'&&b.base&&b.hideBase!==false&&S.blocks.some(x=>String(x.id)===String(b.base)))id=b.id; /* 합쳐진 디테일도 자기 표식 있음 */
+ const mk=document.querySelector('#paper [data-mk="'+id+'"]');if(!mk)return;
+ /* 표식부터 다음 항목 표식까지가 이 항목의 범위 */
+ let el=mk.nextElementSibling;while(el&&el.matches('[data-mk]'))el=el.nextElementSibling;
+ const target=el||mk;let end=target;while(end.nextElementSibling&&!end.nextElementSibling.matches('[data-mk]'))end=end.nextElementSibling;
+ const rr=R.getBoundingClientRect(),top=target.getBoundingClientRect().top,bot=end.getBoundingClientRect().bottom,h=bot-top,vh=rr.height-50;
+ const a=document.activeElement,typing=a&&(a.tagName==='TEXTAREA'||(a.tagName==='INPUT'&&a.type==='text'));
+ let off;
+ if(h<=vh)off=top-rr.top-50-(vh-h)/2;          /* 다 들어가면 가운데로 */
+ else if(typing)off=bot-rr.bottom+30;           /* 글 쓰는 중이면 글이 있는 아래쪽이 보이게 */
+ else off=top-rr.top-50;                        /* 아니면 사진 위쪽부터 */
+ R.scrollTop+=off;
+ if(flash&&target!==mk){document.querySelectorAll('#paper .flash').forEach(x=>x.classList.remove('flash'));target.classList.add('flash');clearTimeout(FOL.ft);FOL.ft=setTimeout(()=>target.classList.remove('flash'),1500);}
+}
+const blkOf=e=>{const c=e.target.closest&&e.target.closest('#blocks [id^=blk]');return c?+c.id.slice(3):-1;};
+['focusin','click'].forEach(ev=>document.addEventListener(ev,e=>{const i=blkOf(e);if(i<0)return;const ch=i!==FOL.i;FOL.i=i;FOL.t=Date.now();setTimeout(()=>followTo(i,ch),60);}));
+['input','change'].forEach(ev=>document.addEventListener(ev,e=>{const i=blkOf(e);if(i<0)return;FOL.i=i;FOL.t=Date.now();}));
+{const _d=drawRight;drawRight=function(){_d.apply(this,arguments);if(FOL.i>=0&&Date.now()-FOL.t<4000){setTimeout(()=>followTo(FOL.i,false),30);setTimeout(()=>followTo(FOL.i,false),400);}};}
+$('bPng').onclick=async()=>{document.querySelectorAll('#paper .flash').forEach(x=>x.classList.remove('flash'));
  if(!window.html2canvas){$('msg').textContent='이미지 변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.';return;}
  $('msg').textContent='이미지를 만드는 중입니다...';
  try{await document.fonts.ready;}catch(x){}
