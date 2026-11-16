@@ -209,6 +209,8 @@ function detailUI(b,i){
   <div class="side"><b>크기와 간격 (px)</b>
    <label>가운데 기준 이미지 폭 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
    <label>디테일 동그라미 지름 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="60" max="600" step="10" data-f="dw" data-i="${i}" placeholder="자동" value="${b.dw||''}">
+   <div style="margin:8px 0;padding:8px;background:#fff8e6;border:1px solid #f0d090;border-radius:8px;font-size:15px">오른쪽 미리보기에서 동그라미를 마우스로 끌어 원하는 자리에 놓을 수 있습니다.
+    ${(b.lOx||b.lOy||b.rOx||b.rOy)?`<br>옮긴 거리: ${(b.lOx||b.lOy)?'왼쪽 '+(b.lOx||0)+', '+(b.lOy||0)+' ':''}${(b.rOx||b.rOy)?'오른쪽 '+(b.rOx||0)+', '+(b.rOy||0):''} <button class="sm" type="button" data-dcreset="${i}">끌어 옮긴 위치 되돌리기</button>`:''}</div>
    <label>왼쪽 디테일 ↔ 기준 이미지 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="lGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.lGap===undefined?'':b.lGap}">
     <label>기준 이미지 ↔ 오른쪽 디테일 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="rGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.rGap===undefined?'':b.rGap}">
   </div>
@@ -294,12 +296,14 @@ const geo=d=>{
   const L=src(d.lPhoto,d.lUrl),R=src(d.rPhoto,d.rUrl),B=baseSrc(d),g=geo(d),round=d.round!==false,z=g.z;
   const len=px=>forExport?(px/Wp*100).toFixed(2)+'%':Math.round(px)+'px';
   let first=true,cap=false,capH=0;const capN=[];
+  const OX=k=>+d[k+'Ox']||0,OY=k=>+d[k+'Oy']||0;   /* 미리보기에서 끌어서 옮긴 거리(px, 900 기준) */
   const mg=k=>{const m=first?0:(k==='r'?g.rg:g.lg);first=false;return len(m);};
   const circ=(u,ti,t,v,k)=>{const db=!!d[k+'DescBold'];
    const cs=+S.capSize||28,ds=+S.capDescSize||27,cw=g.dw*1.2,lines=(s,fz)=>s?String(s).split('\n').reduce((a,l)=>a+Math.max(1,Math.ceil(l.length*fz*0.95/cw)),0):0;
-   if(ti||t){cap=true;const hs=lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0);capH=Math.max(capH,hs);capN.push({v,hs});}
+   if(ti||t){cap=true;const hs=lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0);capH=Math.max(capH,hs);capN.push({v,hs,oy:OY(k)});}
    const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;white-space:normal;word-break:keep-all;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
-   return `<div style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
+   const ox=OX(k),oy=OY(k),tr=(ox||oy)?`transform:translate(${(ox/g.dw*100).toFixed(2)}%,${(oy/g.dw*100).toFixed(2)}%);`:'';
+   return `<div ${forExport?'':`data-dc="${S.blocks.indexOf(d)}" data-side="${k}" data-dw="${g.dw}" title="끌어서 위치를 옮길 수 있습니다" `}style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
   const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?`<div style="display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};"><div style="overflow:hidden;"${forExport?'':' data-bi="'+S.blocks.indexOf(d)+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div></div>`:'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
   const arrows=()=>{
    if(!B)return '';
@@ -314,7 +318,7 @@ const geo=d=>{
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
-    const cx=x0+pos[k]+g.dw/2,r=g.dw/2,hh=cH(q[1])/2,cy=d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2,tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
+    const cx=x0+pos[k]+g.dw/2+OX(k),r=g.dw/2,hh=cH(q[1])/2,cy=(d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2)+OY(k),tx=x0+pos.b+fx*g.bw,ty=H/2-bh/2+fy*bh;
     const hasE=d[k+'Ex']!==undefined&&d[k+'Ex']!==''&&d[k+'Ex']!==null;   /* 끝점을 직접 옮겼는지 */
     let ux,uy,ex,ey,hs;
     if(hasE){ex=+d[k+'Ex']*Wp;ey=+d[k+'Ey']*H;const dx=ex-tx,dy=ey-ty,len=Math.hypot(dx,dy);if(len<20)return;ux=dx/len;uy=dy/len;hs=Math.min(hs0,len*.5);}
@@ -328,7 +332,7 @@ const geo=d=>{
    /* 이미지 저장 프로그램이 svg의 위치(top)를 두 번 적용해 화살표가 40px 내려가던 문제 → 위치는 바깥 칸이 맡고 svg는 그 안에 그대로 */
    return sv?`<div style="position:absolute;left:0;top:40px;${forExport?'width:100%;':'width:'+Wp+'px;'}pointer-events:none;z-index:3;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="display:block;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;">${sv}</svg></div>`:'';
   };
-  return `<div style="position:relative;padding:40px 0 ${(()=>{if(!cap)return 20;const bh=B?g.bw*g.z*arOf(B,.75):0,rowH=Math.max(bh,g.dw);let need=0;capN.forEach(c=>{const cb=c.v==='top'?g.dw:c.v==='bot'?rowH:(rowH+g.dw)/2;need=Math.max(need,cb+10+c.hs-rowH);});return Math.round(Math.max(20,need+20));})()}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
+  return `<div style="position:relative;padding:40px 0 ${(()=>{if(!cap)return 20;const bh=B?g.bw*g.z*arOf(B,.75):0,rowH=Math.max(bh,g.dw);let need=0;capN.forEach(c=>{const cb=(c.v==='top'?g.dw:c.v==='bot'?rowH:(rowH+g.dw)/2)+c.oy;need=Math.max(need,cb+10+c.hs-rowH);});return Math.round(Math.max(20,need+20));})()}px;">${arrows()}<div style="text-align:center;font-size:0;white-space:nowrap;">${items}</div></div>`;
  };
  const capB=b=>(b.title||b.text)?`<div style="padding:22px 40px 0;text-align:center;">${b.title?`<div style="font-size:${+S.titleSize||38}px;font-weight:700;line-height:1.3;margin-bottom:${Math.round((+S.titleSize||38)*.45)}px;">${esc(b.title)}</div>`:''}${b.text?`<div style="font-size:${+S.textSize||28}px;line-height:1.45;color:#555;">${nl(b.text)}</div>`:''}</div>`:'';
  const baseOf=new Map();
@@ -400,6 +404,14 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classL
 /* 빨간 점을 마우스로 끌어서 출발점 옮기기 (미리보기 전용) */
 let DRAG=null;
 const dotMove=(x,y)=>{if(DRAG.end){const c=document.querySelector('#paper [data-end="'+DRAG.i+'"][data-side="'+DRAG.k+'"]');if(!c)return;const sv=c.ownerSVGElement,m=sv.getScreenCTM().inverse(),pt=sv.createSVGPoint();pt.x=x;pt.y=y;const q=pt.matrixTransform(m),vb=sv.viewBox.baseVal,b=S.blocks[DRAG.i],cl=v=>+Math.min(1.2,Math.max(-.2,v)).toFixed(4);b[DRAG.k+'Ex']=cl(q.x/vb.width);b[DRAG.k+'Ey']=cl(q.y/vb.height);drawRight();return;}const bi=document.querySelector('#paper [data-bi="'+DRAG.i+'"]');if(!bi)return;const r=bi.getBoundingClientRect(),b=S.blocks[DRAG.i],cl=v=>+Math.min(1,Math.max(0,v)).toFixed(3);b[DRAG.k+'Ax']=cl((x-r.left)/r.width);b[DRAG.k+'Ay']=cl((y-r.top)/r.height);drawRight();};
+let CDRAG=null;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dcreset]');if(!b)return;const d=S.blocks[+b.dataset.dcreset];['lOx','lOy','rOx','rOy'].forEach(k=>delete d[k]);all();});
+document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#paper [data-dc]');if(!c||(e.target.closest('[data-dot],[data-end]')))return;
+ e.preventDefault();const d=S.blocks[+c.dataset.dc],k=c.dataset.side,sc=c.getBoundingClientRect().width/(+c.dataset.dw||1);
+ CDRAG={d,k,sx:e.clientX,sy:e.clientY,ox:+d[k+'Ox']||0,oy:+d[k+'Oy']||0,sc:sc||1};document.body.style.cursor='move';});
+document.addEventListener('pointermove',e=>{if(!CDRAG)return;e.preventDefault();const c=CDRAG;
+ c.d[c.k+'Ox']=Math.round(c.ox+(e.clientX-c.sx)/c.sc);c.d[c.k+'Oy']=Math.round(c.oy+(e.clientY-c.sy)/c.sc);drawRight();});
+document.addEventListener('pointerup',()=>{if(!CDRAG)return;CDRAG=null;document.body.style.cursor='';drawLeft();});
 document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#paper [data-dot],#paper [data-end]');if(!c)return;e.preventDefault();DRAG=c.dataset.end!==undefined?{i:+c.dataset.end,k:c.dataset.side,end:true}:{i:+c.dataset.dot,k:c.dataset.side};document.body.style.cursor='grabbing';});
 document.addEventListener('pointermove',e=>{if(!DRAG)return;e.preventDefault();dotMove(e.clientX,e.clientY);});
 document.addEventListener('pointerup',e=>{if(!DRAG)return;dotMove(e.clientX,e.clientY);const wasEnd=DRAG.end;DRAG=null;if(wasEnd)drawLeft();document.body.style.cursor='';$('msg').style.color='#1f6f3f';$('msg').textContent=(wasEnd?'끝점(파란 점)':'출발점(빨간 점)')+'을 옮겼습니다.';});
