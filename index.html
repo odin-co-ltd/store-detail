@@ -189,7 +189,8 @@ let S={
 /* 필요할 때만 펼치는 칸: key = 펼침 상태를 기억할 이름, has = 안에 입력된 내용이 있는지 */
 function moreBox(b,i,key,label,has,inner){return `<details class="more" data-i="${i}" data-more="${key}" ${b[key]?'open':''}><summary>${label}${has?'<span class="on">입력됨</span>':''}</summary>${inner}</details>`;}
 /* 항목별 기본 사진 폭: 원단표 700, 나머지 550 */
-function defW(b){return (b.bsz==='700'||/원단/.test(b.label||''))?700:550;}
+function big7(b){return b.bsz===true||b.bsz==='700';}
+function defW(b){return (big7(b)||/원단/.test(b.label||''))?700:550;}
 function sideUI(b,i,k,name){
  const ph=b[k+'Photo'],ur=b[k+'Url'],tx=b[k+'Text'],ti=b[k+'Title']||'';
  return `<div class="side"><b>${name} 이미지 (없으면 비워 두세요)</b>
@@ -206,10 +207,8 @@ function sideUI(b,i,k,name){
 }
 function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
- return `<label>가운데 기준 이미지</label>
+ return `<div style="display:flex;align-items:center;gap:12px;margin:8px 0 3px"><label style="margin:0">가운데 기준 이미지</label><label class="chk" style="font-size:20px;font-weight:700"><input type="checkbox" data-f="bsz" data-i="${i}" ${big7(b)?'checked':''} style="width:20px;height:20px"> 700px</label></div>
   <select data-f="base" data-i="${i}"><option value="">이 칸에 직접 올리기</option>${opts}</select>
-  <label>가운데 기준 이미지 크기</label>
-  <select data-f="bsz" data-i="${i}"><option value="" ${b.bsz!=='700'?'selected':''}>기본</option><option value="700" ${b.bsz==='700'?'selected':''}>크게 (700px)</option></select>
   ${b.base?'':`<input type="file" accept="image/*" data-file="${i}" data-slot="photo" style="margin-top:6px">${b.photo?`<img class="thumb" src="${b.photo}">`:''}${moreBox(b,i,'moreOpen','인터넷 주소 · 제목 · 설명 (필요할 때 펼치기)',!!(b.url||b.title||b.text),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
    <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`)}`}
@@ -281,7 +280,7 @@ const geo=d=>{
   const hasL=!!src(d.lPhoto,d.lUrl),hasR=!!src(d.rPhoto,d.rUrl);
   const n=both?2:1;                 /* 동그라미 개수 */
   const tot=Wp-(hasL?Math.max(0,lg):0)-(hasR?Math.max(0,rg):0);   /* 사진 폭의 합: 마이너스 간격(겹침)일 때 사진을 키우지 않아야 실제로 가까워짐 */
-  let bw=+d.w>0?+d.w:(d.bsz==='700'?700:0),dw=+d.dw>0?+d.dw:0;
+  let bw=+d.w>0?+d.w:(big7(d)?700:0),dw=+d.dw>0?+d.dw:0;
   if(!bw&&!dw){bw=dw=tot/(n+1);}
   else if(!bw){bw=Math.max(100,tot-n*dw);}
   else if(!dw){dw=Math.max(60,(tot-bw)/n);}
