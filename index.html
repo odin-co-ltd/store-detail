@@ -198,8 +198,9 @@ function sideUI(b,i,k,name){
   ${moreBox(b,i,k+'MoreOpen','인터넷 주소 · 제목 · 설명 글 (필요할 때 펼치기)',!!(ur||tx||ti),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
   <label>${name} 제목 (굵은 글씨)</label><input type="text" data-f="${k}Title" data-i="${i}" value="${esc(ti)}">
   <div style="display:flex;align-items:center;gap:10px;margin:8px 0 3px"><label style="margin:0">${name} 설명 글</label><label class="chk" style="font-size:16px;font-weight:700"><input type="checkbox" data-f="${k}DescBold" data-i="${i}" ${b[k+'DescBold']?'checked':''}> 굵게</label></div><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>`)}
-  <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 이 디테일에 화살표 넣기</label>
-  ${b[k+'Arr']?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ 화살표가 출발할 곳 사진에서 누르기</button>${b[k+'Ex']!==undefined&&b[k+'Ex']!==''&&b[k+'Ex']!==null?` <button class="sm" data-eauto="${i}" data-side="${k}" style="margin-top:6px;background:#dde8fb;color:#1f5fbf">끝점 자동(동그라미 가리키기)으로 되돌리기</button>`:''}<div class="hint">완성본에서 빨간 점(출발)과 파란 점(끝)을 마우스로 끌어 옮길 수 있습니다.</div>`:''}</div>`;
+  <div style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px"><label class="chk"><input type="checkbox" data-f="${k}Arr" data-i="${i}" ${b[k+'Arr']?'checked':''}> 화살표 넣기</label><label class="chk"><input type="checkbox" data-f="${k}Ring" data-i="${i}" ${b[k+'Ring']?'checked':''}> 동그라미 넣기 (중요 부분 표시)</label></div>
+  ${b[k+'Ring']?`<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><select data-f="${k}RingS" data-i="${i}" style="width:auto"><option value="" ${!b[k+'RingS']?'selected':''}>점선</option><option value="solid" ${b[k+'RingS']==='solid'?'selected':''}>실선</option></select><span>지름</span><input type="number" min="30" max="500" step="10" data-f="${k}RingD" data-i="${i}" value="${+b[k+'RingD']||120}" style="width:90px"><span>px</span></div>`:''}
+  ${(b[k+'Arr']||b[k+'Ring'])?`<button class="sm" data-pick="${i}" data-side="${k}" style="margin-top:6px;background:#fde3e3;color:#900">➜ ${b[k+'Ring']?'동그라미(화살표 출발점) 자리':'화살표가 출발할 곳'} 사진에서 누르기</button>${b[k+'Ex']!==undefined&&b[k+'Ex']!==''&&b[k+'Ex']!==null?` <button class="sm" data-eauto="${i}" data-side="${k}" style="margin-top:6px;background:#dde8fb;color:#1f5fbf">끝점 자동(동그라미 가리키기)으로 되돌리기</button>`:''}<div class="hint">미리보기에서 빨간 점(${b[k+'Ring']?'동그라미 가운데·':''}출발)${b[k+'Arr']?'과 파란 점(끝)':''}을 마우스로 끌어 옮길 수 있습니다.</div>`:''}</div>`;
 }
 function detailUI(b,i){
  const opts=S.blocks.filter(x=>x.id!==b.id&&x.type!=='notice'&&x.type!=='detail').map(x=>`<option value="${x.id}" ${String(b.base)===String(x.id)?'selected':''}>${esc(nm(x))}${(x.photo||x.url)?'':' (사진 없음)'}</option>`).join('');
@@ -209,22 +210,18 @@ function detailUI(b,i){
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
    <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`)}`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
-  <div class="side"><b>크기와 간격 (px)</b>
-   <label>가운데 기준 이미지 폭 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
-   <label>디테일 동그라미 지름 (비우면 자동, 전체가 900이 되도록 계산)</label><input type="number" min="60" max="600" step="10" data-f="dw" data-i="${i}" placeholder="자동" value="${b.dw||''}">
-   <div style="margin:8px 0;padding:8px;background:#fff8e6;border:1px solid #f0d090;border-radius:8px;font-size:15px">오른쪽 미리보기에서 동그라미와 가운데 기준 이미지를 마우스로 끌어 옮길 수 있습니다. 기준 이미지 오른쪽 아래 파란 네모를 끌면 크기가 바뀝니다.
-    ${(b.lOx||b.lOy||b.rOx||b.rOy||b.bOx||b.bOy)?`<br>옮긴 거리: ${(b.bOx||b.bOy)?'기준 이미지 '+(b.bOx||0)+', '+(b.bOy||0)+' ':''}${(b.lOx||b.lOy)?'왼쪽 '+(b.lOx||0)+', '+(b.lOy||0)+' ':''}${(b.rOx||b.rOy)?'오른쪽 '+(b.rOx||0)+', '+(b.rOy||0):''} <button class="sm" type="button" data-dcreset="${i}">끌어 옮긴 위치 되돌리기</button>`:''}</div>
-   <label>왼쪽 디테일 ↔ 기준 이미지 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="lGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.lGap===undefined?'':b.lGap}">
-    <label>기준 이미지 ↔ 오른쪽 디테일 간격 (마이너스는 겹쳐서 더 가깝게, 비우면 ${b.gap!==undefined&&b.gap!==''?b.gap:-30})</label><input type="number" min="-300" max="100" step="5" data-f="rGap" data-i="${i}" placeholder="${b.gap!==undefined&&b.gap!==''?b.gap:-30}" value="${b.rGap===undefined?'':b.rGap}">
-  </div>
+  <div style="margin:8px 0;padding:8px;background:#fff8e6;border:1px solid #f0d090;border-radius:8px;font-size:15px">오른쪽 미리보기에서 동그라미와 가운데 기준 이미지를 마우스로 끌어 옮길 수 있습니다. 각각 오른쪽 아래 파란 네모를 끌면 크기가 바뀝니다.
+    ${(b.lOx||b.lOy||b.rOx||b.rOy||b.bOx||b.bOy||+b.w>0||+b.dw>0)?`<br>옮긴 거리: ${(b.bOx||b.bOy)?'기준 이미지 '+(b.bOx||0)+', '+(b.bOy||0)+' ':''}${(b.lOx||b.lOy)?'왼쪽 '+(b.lOx||0)+', '+(b.lOy||0)+' ':''}${(b.rOx||b.rOy)?'오른쪽 '+(b.rOx||0)+', '+(b.rOy||0):''} <button class="sm" type="button" data-dcreset="${i}">위치·크기 되돌리기</button>`:''}</div>
   <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||130}%</b></div>
   <input type="range" min="100" max="180" step="5" value="${+b.zoom||130}" data-f="zoom" data-i="${i}">
   <div class="side"><b>화살표와 동그라미 모양</b>
-   <div class="trow" style="margin-top:6px"><span>굵기</span><b>${+b.aw||10}px</b></div>
-   <input type="range" min="3" max="24" step="1" value="${+b.aw||10}" data-f="aw" data-i="${i}">
-   <div class="trow" style="margin-top:6px"><span>화살촉(머리) 크기</span><b>${+b.hz||70}%</b></div>
-   <input type="range" min="30" max="150" step="5" value="${+b.hz||70}" data-f="hz" data-i="${i}">
-   <div class="trow"><span class="clr">화살표 색상 <input type="color" data-f="ac" data-i="${i}" value="${b.ac||'#2fd65a'}"></span><span class="clr">동그라미 테두리 <input type="color" data-f="bc" data-i="${i}" value="${b.bc||'#222222'}"></span></div>
+   <div class="trow" style="margin-top:6px"><span>화살표 굵기</span><b>${+b.aw||5}px</b></div>
+   <input type="range" min="3" max="24" step="1" value="${+b.aw||5}" data-f="aw" data-i="${i}">
+   <div class="trow" style="margin-top:6px"><span>화살촉(머리) 크기</span><b>${+b.hz||100}%</b></div>
+   <input type="range" min="30" max="150" step="5" value="${+b.hz||100}" data-f="hz" data-i="${i}">
+    <div class="trow" style="margin-top:6px"><span>강조 동그라미 굵기</span><b>${+b.rw||5}px</b></div>
+    <input type="range" min="2" max="20" step="1" value="${+b.rw||5}" data-f="rw" data-i="${i}">
+   <div class="trow"><span class="clr">화살표 색상 <input type="color" data-f="ac" data-i="${i}" value="${b.ac||'#ffea00'}"></span><span class="clr">강조 동그라미 색상 <input type="color" data-f="rc" data-i="${i}" value="${b.rc||'#ffea00'}"></span><span class="clr">디테일 사진 테두리 <input type="color" data-f="bc" data-i="${i}" value="${b.bc||'#222222'}"></span></div>
    <label class="chk" style="margin-top:6px"><input type="checkbox" data-f="sh" data-i="${i}" ${b.sh?'checked':''}> 동그라미에 그림자 넣기</label>
    <div class="hint">화살표는 기준 사진에서 눌러 둔 곳에서 출발해 동그란 디테일 사진을 가리킵니다.</div></div>
   <label class="chk" style="margin-top:8px"><input type="checkbox" data-f="round" data-i="${i}" ${b.round!==false?'checked':''}> 디테일 사진을 동그랗게 자르기</label>
@@ -246,8 +243,7 @@ function drawLeft(){
    <label>항목 이름</label><input type="text" data-f="label" data-i="${i}" value="${esc(nm(b))}">
    ${hasPhoto?`<label>사진</label><input type="file" accept="image/*" data-file="${i}">
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
-     <label>이미지 폭 (px, 비우면 자동 · 최대 900)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
-     <div class="small" style="margin:6px 0;color:#555">오른쪽 미리보기에서 사진을 끌어 옮기고, 오른쪽 아래 파란 네모를 끌어 크기를 바꿀 수 있습니다.${(b.pOx||b.pOy)?` (옮긴 거리 ${b.pOx||0}, ${b.pOy||0}) <button class="sm" type="button" data-preset="${i}">옮긴 위치 되돌리기</button>`:''}</div>
+     <div class="small" style="margin:6px 0;color:#555">오른쪽 미리보기에서 사진을 끌어 옮기고, 오른쪽 아래 파란 네모를 끌어 크기를 바꿀 수 있습니다. (지금 폭 ${+b.w>0?b.w:550}px)${(b.pOx||b.pOy||+b.w>0)?` <button class="sm" type="button" data-preset="${i}">기본(550, 가운데)으로 되돌리기</button>`:''}</div>
 `:''}
    ${moreBox(b,i,'moreOpen',hasPhoto?'인터넷 주소 · 제목 · 설명 (필요할 때 펼치기)':'제목 · 설명 (필요할 때 펼치기)',!!((hasPhoto&&b.url)||b.title||b.text),`${hasPhoto?`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
@@ -292,7 +288,7 @@ const geo=d=>{
  const pimg=b=>{
   const u=forExport?(b.url||''):(b.photo||b.url||'');if(!u)return '';
   const alt=esc(b.title||S.name);
-  const w0=+b.w>0?Math.min(Wp,+b.w):(matchW?Math.min(Wp,Math.round(matchW)):0);
+  const w0=+b.w>0?Math.min(Wp,+b.w):550;   /* 기본 550px 가운데 */
   const w=w0||Wp,ox=+b.pOx||0,oy=+b.pOy||0,ix=S.blocks.indexOf(b);
   /* 끌어 옮긴 거리: 가로는 left, 세로는 margin-top (둘 다 900 기준 %라서 카페24에서 줄어들어도 비율 유지) */
   if(forExport)return `<img src="${esc(u)}" style="width:${(w/Wp*100).toFixed(1)}%;display:block;margin:${(oy/Wp*100).toFixed(2)}% auto 0;position:relative;left:${(ox/Wp*100).toFixed(2)}%;" alt="${alt}">`;
@@ -309,32 +305,38 @@ const geo=d=>{
    if(ti||t){cap=true;const hs=lines(ti,cs)*cs*1.4+(t?(ti?6:0)+Math.max(lines(t,ds),ti?1:2)*ds*1.5:0);capH=Math.max(capH,hs);capN.push({v,hs,oy:OY(k)});}
    const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;white-space:normal;word-break:keep-all;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
    const ox=OX(k),oy=OY(k),tr=(ox||oy)?`transform:translate(${(ox/g.dw*100).toFixed(2)}%,${(oy/g.dw*100).toFixed(2)}%);`:'';
-   return `<div ${forExport?'':`data-dc="${S.blocks.indexOf(d)}" data-side="${k}" data-dw="${g.dw}" title="끌어서 위치를 옮길 수 있습니다" `}style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}</div>`;};
+   return `<div ${forExport?'':`data-dc="${S.blocks.indexOf(d)}" data-side="${k}" data-dw="${g.dw}" title="끌어서 위치를 옮길 수 있습니다" `}style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}${forExport?'':`<div data-dres="${S.blocks.indexOf(d)}" class="bres" title="끌어서 동그라미 크기 조절"></div>`}</div>`;};
   const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?(()=>{const bx=+d.bOx||0,by=+d.bOy||0,bh0=g.bw*z*arOf(B,.75),tr=(bx||by)?`transform:translate(${(bx/g.bw*100).toFixed(2)}%,${(by/bh0*100).toFixed(2)}%);`:'',ix=S.blocks.indexOf(d);
    return `<div ${forExport?'':`data-bmv="${ix}" title="끌어서 옮기기 · 오른쪽 아래 네모를 끌면 크기 조절" `}style="position:relative;display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><div style="overflow:hidden;"${forExport?'':' data-bi="'+ix+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div>${forExport?'':`<div data-bres="${ix}" class="bres" title="끌어서 크기 조절"></div>`}</div>`;})():'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
   const arrows=()=>{
    if(!B)return '';
-   const sides=[];if(L&&d.lArr)sides.push(['l',L]);if(R&&d.rArr)sides.push(['r',R]);
+   const sides=[];if(L&&(d.lArr||d.lRing))sides.push(['l',L]);if(R&&(d.rArr||d.rRing))sides.push(['r',R]);
    if(!sides.length)return '';
    const bh=g.bw*z*arOf(B,.75),cH=u=>round?g.dw:g.dw*arOf(u,1);
    let cur=0,f2=true;const pos={};
    const place=(k,w)=>{const m=f2?0:(k==='r'?g.rg:g.lg);f2=false;pos[k]=cur+m;cur=pos[k]+w;};
    if(L)place('l',g.dw);place('b',g.bw);if(R)place('r',g.dw);
    const x0=(Wp-cur)/2,H=Math.max(bh,L?cH(L):0,R?cH(R):0);
-   const col=d.ac||'#2fd65a',aw=+d.aw||10,hs0=Math.max(aw*1.8,aw*3.2*((+d.hz||70)/100));   /* 화살촉은 최소한 막대보다 넓게 */   /* 화살촉 크기: 기본 70% */
+   const col=d.ac||'#ffea00',aw=+d.aw||5,hs0=Math.max(aw*1.8,aw*3.2*((+d.hz||100)/100));   /* 화살촉은 최소한 막대보다 넓게 */   /* 화살촉 크기: 기본 70% */
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
-    const cx=x0+pos[k]+g.dw/2+OX(k),r=g.dw/2,hh=cH(q[1])/2,cy=(d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2)+OY(k),tx=x0+pos.b+fx*g.bw+(+d.bOx||0),ty=H/2-bh/2+fy*bh+(+d.bOy||0);
+    let cx=x0+pos[k]+g.dw/2+OX(k),r=g.dw/2,hh=cH(q[1])/2,cy=(d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2)+OY(k),tx=x0+pos.b+fx*g.bw+(+d.bOx||0),ty=H/2-bh/2+fy*bh+(+d.bOy||0);
+    const f=v=>v.toFixed(1),ring=!!d[k+'Ring'],rr=ring?(+d[k+'RingD']||120)/2:0;
+    const rc=d.rc||'#ffea00',rw=+d.rw||5;
+    if(ring)sv+=`<circle cx="${f(tx)}" cy="${f(ty)}" r="${f(rr)}" fill="none" stroke="${esc(rc)}" stroke-width="${rw}" ${d[k+'RingS']==='solid'?'':`stroke-dasharray="${f(rw*3)} ${f(rw*2)}"`}/>`;
+    const dotTx=tx,dotTy=ty;
+    if(!d[k+'Arr']){if(!forExport)sv+=`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="8" fill="#fff" stroke="#c92a2a" stroke-width="4" style="pointer-events:all;cursor:grab"/>`;return;}
     const hasE=d[k+'Ex']!==undefined&&d[k+'Ex']!==''&&d[k+'Ex']!==null;   /* 끝점을 직접 옮겼는지 */
     let ux,uy,ex,ey,hs;
     if(hasE){ex=+d[k+'Ex']*Wp;ey=+d[k+'Ey']*H;const dx=ex-tx,dy=ey-ty,len=Math.hypot(dx,dy);if(len<20)return;ux=dx/len;uy=dy/len;hs=Math.min(hs0,len*.5);}
     else{const dx=cx-tx,dy=cy-ty,len=Math.hypot(dx,dy),av=len-r-4;if(av<14)return;   /* 출발점이 동그라미 밑에 가려진 경우만 생략 */
      hs=Math.min(hs0,av*.7);ux=dx/len;uy=dy/len;ex=cx-ux*(r+4);ey=cy-uy*(r+4);}
-    const bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux,f=v=>v.toFixed(1);
+    if(ring){const tl=Math.hypot(ex-tx,ey-ty);if(tl<rr+hs+6)return;tx+=ux*(rr+rw/2);ty+=uy*(rr+rw/2);}   /* 동그라미 테두리에서 출발 */
+    const bx=ex-ux*hs*.8,by=ey-uy*hs*.8,px=-uy,py=ux;
     const dk='#'+[1,3,5].map(i=>Math.round(parseInt((col+'').slice(i,i+2)||'0',16)*.55).toString(16).padStart(2,'0')).join('');
     const hp=`${f(ex)},${f(ey)} ${f(ex-ux*hs+px*hs*.5)},${f(ey-uy*hs+py*hs*.5)} ${f(ex-ux*hs-px*hs*.5)},${f(ey-uy*hs-py*hs*.5)}`;
-    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(tx)}" cy="${f(ty)}" r="8" fill="#fff" stroke="#c92a2a" stroke-width="4" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="9" fill="rgba(255,255,255,0.01)" stroke="#1f5fbf" stroke-width="4" style="pointer-events:all;cursor:grab"/>`);
+    sv+=`<line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${dk}" stroke-width="${aw+5}" stroke-linecap="round"/><polygon points="${hp}" fill="${dk}" stroke="${dk}" stroke-width="5" stroke-linejoin="round"/><line x1="${f(tx)}" y1="${f(ty)}" x2="${f(bx)}" y2="${f(by)}" stroke="${esc(col)}" stroke-width="${aw}" stroke-linecap="round"/><polygon points="${hp}" fill="${esc(col)}"/>`+(forExport?'':`<circle data-dot="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(dotTx)}" cy="${f(dotTy)}" r="8" fill="#fff" stroke="#c92a2a" stroke-width="4" style="pointer-events:all;cursor:grab"/><circle data-end="${S.blocks.indexOf(d)}" data-side="${k}" cx="${f(ex)}" cy="${f(ey)}" r="9" fill="rgba(255,255,255,0.01)" stroke="#1f5fbf" stroke-width="4" style="pointer-events:all;cursor:grab"/>`);
    });
    /* 이미지 저장 프로그램이 svg의 위치(top)를 두 번 적용해 화살표가 40px 내려가던 문제 → 위치는 바깥 칸이 맡고 svg는 그 안에 그대로 */
    return sv?`<div style="position:absolute;left:0;top:40px;${forExport?'width:100%;':'width:'+Wp+'px;'}pointer-events:none;z-index:3;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wp} ${f1(H)}" style="display:block;${forExport?'width:100%;height:auto;':'width:'+Wp+'px;height:'+Math.round(H)+'px;'}pointer-events:none;overflow:visible;">${sv}</svg></div>`:'';
@@ -397,7 +399,7 @@ document.addEventListener('input',e=>{
  if(t.id==='nbold'){S.nameBold=t.checked;drawRight();return;}
  if(t.id==='ncolor'){S.nameColor=t.value;drawRight();return;}
  if(t.id==='sub'){S.sub=t.value;drawRight();return;}
- if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT'||/Arr$/.test(t.dataset.f)){if(/Arr$/.test(t.dataset.f)&&!t.checked&&PICK)endPick();drawLeft();}if((t.dataset.f==='zoom'||t.dataset.f==='aw'||t.dataset.f==='hz')&&t.previousElementSibling){const bb=t.previousElementSibling.querySelector('b');if(bb)bb.textContent=t.value+(t.dataset.f==='aw'?'px':'%');}}
+ if(t.dataset.f){S.blocks[+t.dataset.i][t.dataset.f]=t.type==='checkbox'?t.checked:t.value;drawRight();drawOrder();if(t.tagName==='SELECT'||/(Arr|Ring)$/.test(t.dataset.f)){if(/Arr$/.test(t.dataset.f)&&!t.checked&&PICK)endPick();drawLeft();}if((t.dataset.f==='zoom'||t.dataset.f==='aw'||t.dataset.f==='hz'||t.dataset.f==='rw')&&t.previousElementSibling){const bb=t.previousElementSibling.querySelector('b');if(bb)bb.textContent=t.value+(t.dataset.f==='aw'||t.dataset.f==='rw'?'px':'%');}}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
@@ -412,20 +414,21 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classL
 let DRAG=null;
 const dotMove=(x,y)=>{if(DRAG.end){const c=document.querySelector('#paper [data-end="'+DRAG.i+'"][data-side="'+DRAG.k+'"]');if(!c)return;const sv=c.ownerSVGElement,m=sv.getScreenCTM().inverse(),pt=sv.createSVGPoint();pt.x=x;pt.y=y;const q=pt.matrixTransform(m),vb=sv.viewBox.baseVal,b=S.blocks[DRAG.i],cl=v=>+Math.min(1.2,Math.max(-.2,v)).toFixed(4);b[DRAG.k+'Ex']=cl(q.x/vb.width);b[DRAG.k+'Ey']=cl(q.y/vb.height);drawRight();return;}const bi=document.querySelector('#paper [data-bi="'+DRAG.i+'"]');if(!bi)return;const r=bi.getBoundingClientRect(),b=S.blocks[DRAG.i],cl=v=>+Math.min(1,Math.max(0,v)).toFixed(3);b[DRAG.k+'Ax']=cl((x-r.left)/r.width);b[DRAG.k+'Ay']=cl((y-r.top)/r.height);drawRight();};
 let CDRAG=null,BDRAG=null;
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-preset]');if(!b)return;const d=S.blocks[+b.dataset.preset];delete d.pOx;delete d.pOy;all();});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-preset]');if(!b)return;const d=S.blocks[+b.dataset.preset];delete d.pOx;delete d.pOy;delete d.w;all();});
 document.addEventListener('pointerdown',e=>{if(typeof PICK!=='undefined'&&PICK)return;
- const rs=e.target.closest&&e.target.closest('#paper [data-bres],#paper [data-pres]'),mv=!rs&&e.target.closest&&e.target.closest('#paper [data-bmv],#paper [data-pmv]');
- if(!rs&&!mv)return;if(e.target.closest('[data-dot],[data-end],[data-dc]'))return;
- e.preventDefault();e.stopPropagation();const box=(rs?rs.parentElement:mv),ph=box.dataset.pmv!==undefined,ix=+(ph?box.dataset.pmv:box.dataset.bmv),d=S.blocks[ix],g=box.getBoundingClientRect();
+ const rs=e.target.closest&&e.target.closest('#paper [data-bres],#paper [data-pres],#paper [data-dres]'),mv=!rs&&e.target.closest&&e.target.closest('#paper [data-bmv],#paper [data-pmv]');
+ if(!rs&&!mv)return;if(e.target.closest('[data-dot],[data-end]')||(!rs&&e.target.closest('[data-dc]')))return;
+ e.preventDefault();e.stopPropagation();const box=(rs?rs.parentElement:mv),dr=!!(rs&&rs.dataset.dres!==undefined),ph=box.dataset.pmv!==undefined,ix=+(dr?rs.dataset.dres:ph?box.dataset.pmv:box.dataset.bmv),d=S.blocks[ix],g=box.getBoundingClientRect();
  const sc=(g.width/(box.offsetWidth||1))||1,kx=ph?'pOx':'bOx',ky=ph?'pOy':'bOy';
- BDRAG={d,rs:!!rs,kx,ky,sx:e.clientX,sy:e.clientY,ox:+d[kx]||0,oy:+d[ky]||0,w0:+d.w>0?+d.w:box.offsetWidth,sc};document.body.style.cursor=rs?'nwse-resize':'move';},true);
+ BDRAG={d,rs:!!rs,dr,kx,ky,sx:e.clientX,sy:e.clientY,ox:+d[kx]||0,oy:+d[ky]||0,w0:dr?box.offsetWidth:(+d.w>0?+d.w:box.offsetWidth),sc};document.body.style.cursor=rs?'nwse-resize':'move';},true);
 document.addEventListener('pointermove',e=>{if(!BDRAG)return;e.preventDefault();const c=BDRAG;
- if(c.rs){c.d.w=String(Math.max(120,Math.min(900,Math.round(c.w0+(e.clientX-c.sx)/c.sc))));}
+ if(c.rs&&c.dr){c.d.dw=String(Math.max(60,Math.min(600,Math.round(c.w0+(e.clientX-c.sx)/c.sc))));}
+ else if(c.rs){c.d.w=String(Math.max(120,Math.min(900,Math.round(c.w0+(e.clientX-c.sx)/c.sc))));}
  else{c.d[c.kx]=Math.round(c.ox+(e.clientX-c.sx)/c.sc);c.d[c.ky]=Math.round(c.oy+(e.clientY-c.sy)/c.sc);}
  drawRight();});
 document.addEventListener('pointerup',()=>{if(!BDRAG)return;BDRAG=null;document.body.style.cursor='';drawLeft();});
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dcreset]');if(!b)return;const d=S.blocks[+b.dataset.dcreset];['lOx','lOy','rOx','rOy','bOx','bOy'].forEach(k=>delete d[k]);all();});
-document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#paper [data-dc]');if(!c||(e.target.closest('[data-dot],[data-end]')))return;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dcreset]');if(!b)return;const d=S.blocks[+b.dataset.dcreset];['lOx','lOy','rOx','rOy','bOx','bOy','w','dw'].forEach(k=>delete d[k]);all();});
+document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#paper [data-dc]');if(!c||(e.target.closest('[data-dot],[data-end],[data-dres]')))return;
  e.preventDefault();const d=S.blocks[+c.dataset.dc],k=c.dataset.side,sc=c.getBoundingClientRect().width/(+c.dataset.dw||1);
  CDRAG={d,k,sx:e.clientX,sy:e.clientY,ox:+d[k+'Ox']||0,oy:+d[k+'Oy']||0,sc:sc||1};document.body.style.cursor='move';});
 document.addEventListener('pointermove',e=>{if(!CDRAG)return;e.preventDefault();const c=CDRAG;
