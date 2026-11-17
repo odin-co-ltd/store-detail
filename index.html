@@ -66,8 +66,8 @@ input[type=range]{width:100%}
 #paper.pick [data-bi]{outline:4px dashed #c92a2a;outline-offset:-4px}
 #paper.exporting [data-dot],#paper.exporting [data-end],#paper.exporting .bres{display:none}
 .bres{position:absolute;right:-8px;bottom:-8px;width:22px;height:22px;background:#fff;border:4px solid #1f5fbf;border-radius:4px;cursor:nwse-resize;z-index:4;box-sizing:border-box}
-#paper [data-bmv]:hover{outline:2px dashed #1f5fbf;outline-offset:2px}
-#paper.exporting [data-bmv]{outline:none!important}
+#paper [data-bmv]:hover,#paper [data-pmv]:hover{outline:2px dashed #1f5fbf;outline-offset:2px}
+#paper.exporting [data-bmv],#paper.exporting [data-pmv]{outline:none!important}
 #pickbar{display:none;position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#c92a2a;color:#fff;padding:12px 18px;border-radius:12px;z-index:99;font-size:18px;box-shadow:0 3px 12px #0006;align-items:center;gap:12px}
 #pickbar button{background:#fff;color:#c92a2a;font-weight:bold}
 @media(max-width:900px){.wrap{flex-direction:column}.left{width:100%}.right{position:static;max-height:none;overflow:visible}}
@@ -247,6 +247,7 @@ function drawLeft(){
    ${hasPhoto?`<label>사진</label><input type="file" accept="image/*" data-file="${i}">
      ${b.photo?`<img class="thumb" src="${b.photo}">`:''}
      <label>이미지 폭 (px, 비우면 자동 · 최대 900)</label><input type="number" min="100" max="900" step="10" data-f="w" data-i="${i}" placeholder="자동" value="${b.w||''}">
+     <div class="small" style="margin:6px 0;color:#555">오른쪽 미리보기에서 사진을 끌어 옮기고, 오른쪽 아래 파란 네모를 끌어 크기를 바꿀 수 있습니다.${(b.pOx||b.pOy)?` (옮긴 거리 ${b.pOx||0}, ${b.pOy||0}) <button class="sm" type="button" data-preset="${i}">옮긴 위치 되돌리기</button>`:''}</div>
 `:''}
    ${moreBox(b,i,'moreOpen',hasPhoto?'인터넷 주소 · 제목 · 설명 (필요할 때 펼치기)':'제목 · 설명 (필요할 때 펼치기)',!!((hasPhoto&&b.url)||b.title||b.text),`${hasPhoto?`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="url" data-i="${i}" value="${esc(b.url)}" placeholder="https://...">`:''}
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
@@ -292,8 +293,10 @@ const geo=d=>{
   const u=forExport?(b.url||''):(b.photo||b.url||'');if(!u)return '';
   const alt=esc(b.title||S.name);
   const w0=+b.w>0?Math.min(Wp,+b.w):(matchW?Math.min(Wp,Math.round(matchW)):0);
-  if(!w0)return `<img src="${esc(u)}" style="width:100%;display:block;" alt="${alt}">`;
-  return forExport?`<img src="${esc(u)}" style="width:${(w0/Wp*100).toFixed(1)}%;display:block;margin:0 auto;" alt="${alt}">`:`<img src="${esc(u)}" style="width:${w0}px;max-width:100%;display:block;margin:0 auto;" alt="${alt}">`;
+  const w=w0||Wp,ox=+b.pOx||0,oy=+b.pOy||0,ix=S.blocks.indexOf(b);
+  /* 끌어 옮긴 거리: 가로는 left, 세로는 margin-top (둘 다 900 기준 %라서 카페24에서 줄어들어도 비율 유지) */
+  if(forExport)return `<img src="${esc(u)}" style="width:${(w/Wp*100).toFixed(1)}%;display:block;margin:${(oy/Wp*100).toFixed(2)}% auto 0;position:relative;left:${(ox/Wp*100).toFixed(2)}%;" alt="${alt}">`;
+  return `<div data-pmv="${ix}" title="끌어서 옮기기 · 오른쪽 아래 네모를 끌면 크기 조절" style="position:relative;width:${w}px;max-width:100%;margin:${oy}px auto 0;left:${ox}px;cursor:move;touch-action:none;"><img src="${esc(u)}" style="width:100%;display:block;" alt="${alt}"><div data-pres="${ix}" class="bres" title="끌어서 크기 조절"></div></div>`;
  };
  const compD=d=>{
   const L=src(d.lPhoto,d.lUrl),R=src(d.rPhoto,d.rUrl),B=baseSrc(d),g=geo(d),round=d.round!==false,z=g.z;
@@ -409,15 +412,16 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classL
 let DRAG=null;
 const dotMove=(x,y)=>{if(DRAG.end){const c=document.querySelector('#paper [data-end="'+DRAG.i+'"][data-side="'+DRAG.k+'"]');if(!c)return;const sv=c.ownerSVGElement,m=sv.getScreenCTM().inverse(),pt=sv.createSVGPoint();pt.x=x;pt.y=y;const q=pt.matrixTransform(m),vb=sv.viewBox.baseVal,b=S.blocks[DRAG.i],cl=v=>+Math.min(1.2,Math.max(-.2,v)).toFixed(4);b[DRAG.k+'Ex']=cl(q.x/vb.width);b[DRAG.k+'Ey']=cl(q.y/vb.height);drawRight();return;}const bi=document.querySelector('#paper [data-bi="'+DRAG.i+'"]');if(!bi)return;const r=bi.getBoundingClientRect(),b=S.blocks[DRAG.i],cl=v=>+Math.min(1,Math.max(0,v)).toFixed(3);b[DRAG.k+'Ax']=cl((x-r.left)/r.width);b[DRAG.k+'Ay']=cl((y-r.top)/r.height);drawRight();};
 let CDRAG=null,BDRAG=null;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-preset]');if(!b)return;const d=S.blocks[+b.dataset.preset];delete d.pOx;delete d.pOy;all();});
 document.addEventListener('pointerdown',e=>{if(typeof PICK!=='undefined'&&PICK)return;
- const rs=e.target.closest&&e.target.closest('#paper [data-bres]'),mv=!rs&&e.target.closest&&e.target.closest('#paper [data-bmv]');
+ const rs=e.target.closest&&e.target.closest('#paper [data-bres],#paper [data-pres]'),mv=!rs&&e.target.closest&&e.target.closest('#paper [data-bmv],#paper [data-pmv]');
  if(!rs&&!mv)return;if(e.target.closest('[data-dot],[data-end],[data-dc]'))return;
- e.preventDefault();e.stopPropagation();const ix=+(rs?rs.dataset.bres:mv.dataset.bmv),d=S.blocks[ix],box=(rs?rs.parentElement:mv),g=box.getBoundingClientRect();
- const sc=(g.width/(box.offsetWidth||1))||1;
- BDRAG={d,rs:!!rs,sx:e.clientX,sy:e.clientY,ox:+d.bOx||0,oy:+d.bOy||0,w0:+d.w>0?+d.w:box.offsetWidth,sc};document.body.style.cursor=rs?'nwse-resize':'move';},true);
+ e.preventDefault();e.stopPropagation();const box=(rs?rs.parentElement:mv),ph=box.dataset.pmv!==undefined,ix=+(ph?box.dataset.pmv:box.dataset.bmv),d=S.blocks[ix],g=box.getBoundingClientRect();
+ const sc=(g.width/(box.offsetWidth||1))||1,kx=ph?'pOx':'bOx',ky=ph?'pOy':'bOy';
+ BDRAG={d,rs:!!rs,kx,ky,sx:e.clientX,sy:e.clientY,ox:+d[kx]||0,oy:+d[ky]||0,w0:+d.w>0?+d.w:box.offsetWidth,sc};document.body.style.cursor=rs?'nwse-resize':'move';},true);
 document.addEventListener('pointermove',e=>{if(!BDRAG)return;e.preventDefault();const c=BDRAG;
  if(c.rs){c.d.w=String(Math.max(120,Math.min(900,Math.round(c.w0+(e.clientX-c.sx)/c.sc))));}
- else{c.d.bOx=Math.round(c.ox+(e.clientX-c.sx)/c.sc);c.d.bOy=Math.round(c.oy+(e.clientY-c.sy)/c.sc);}
+ else{c.d[c.kx]=Math.round(c.ox+(e.clientX-c.sx)/c.sc);c.d[c.ky]=Math.round(c.oy+(e.clientY-c.sy)/c.sc);}
  drawRight();});
 document.addEventListener('pointerup',()=>{if(!BDRAG)return;BDRAG=null;document.body.style.cursor='';drawLeft();});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dcreset]');if(!b)return;const d=S.blocks[+b.dataset.dcreset];['lOx','lOy','rOx','rOy','bOx','bOy'].forEach(k=>delete d[k]);all();});
