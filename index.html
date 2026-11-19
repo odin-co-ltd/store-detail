@@ -196,8 +196,6 @@ function sideUI(b,i,k,name){
  return `<div class="side"><b>${name} 이미지 (없으면 비워 두세요)</b>
   <input type="file" accept="image/*" data-file="${i}" data-slot="${k}Photo">
   ${ph?`<img class="thumb" src="${ph}">`:''}
-  <label>${name} 동그라미 세로 위치 (기준 사진 기준)</label>
-  <select data-f="${k}V" data-i="${i}"><option value="" ${!b[k+'V']?'selected':''}>중간</option><option value="top" ${b[k+'V']==='top'?'selected':''}>위</option><option value="bot" ${b[k+'V']==='bot'?'selected':''}>아래</option></select>
   ${moreBox(b,i,k+'MoreOpen','인터넷 주소 · 제목 · 설명 글 (필요할 때 펼치기)',!!(ur||tx||ti),`<label>인터넷 주소 (HTML 복사용, 선택)</label><input type="text" data-f="${k}Url" data-i="${i}" value="${esc(ur)}" placeholder="https://...">
   <label>${name} 제목 (굵은 글씨)</label><input type="text" data-f="${k}Title" data-i="${i}" value="${esc(ti)}">
   <div style="display:flex;align-items:center;gap:10px;margin:8px 0 3px"><label style="margin:0">${name} 설명 글</label><label class="chk" style="font-size:16px;font-weight:700"><input type="checkbox" data-f="${k}DescBold" data-i="${i}" ${b[k+'DescBold']?'checked':''}> 굵게</label></div><textarea data-f="${k}Text" data-i="${i}">${esc(tx)}</textarea>`)}
@@ -309,8 +307,8 @@ const geo=d=>{
    const capHtml=(ti||t)?`<div style="position:absolute;left:-10%;right:-10%;top:100%;margin-top:10px;text-align:center;white-space:normal;word-break:keep-all;">${ti?`<div style="font-size:${cs}px;font-weight:700;line-height:1.4;color:#222;">${nl(ti)}</div>`:''}${t?`<div style="font-size:${ds}px;font-weight:${db?700:400};line-height:1.5;color:${db?'#222':'#555'};${ti?'margin-top:6px;':''}">${nl(t)}</div>`:''}</div>`:'';
    const ox=OX(k),oy=OY(k),tr=(ox||oy)?`transform:translate(${(ox/g.dw*100).toFixed(2)}%,${(oy/g.dw*100).toFixed(2)}%);`:'';
    return `<div ${forExport?'':`data-dc="${S.blocks.indexOf(d)}" data-side="${k}" data-dw="${g.dw}" title="끌어서 위치를 옮길 수 있습니다" `}style="position:relative;z-index:2;display:inline-block;vertical-align:${v==='top'?'top':v==='bot'?'bottom':'middle'};width:${len(g.dw)};margin-left:${mg(k)};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><img src="${esc(u)}" style="width:100%;display:block;background:transparent;${round?`${forExport?'aspect-ratio:1/1;':'height:'+Math.round(g.dw)+'px;'}object-fit:cover;border-radius:50%;border:3px solid ${esc(d.bc||'#222222')};${d.sh?'box-shadow:0 3px 10px rgba(0,0,0,.4);':''}box-sizing:border-box;`:'height:auto;'}" alt="">${capHtml}${forExport?'':`<div data-dres="${S.blocks.indexOf(d)}" class="bres" title="끌어서 동그라미 크기 조절"></div>`}</div>`;};
-  const items=(L?circ(L,d.lTitle,d.lText,d.lV,'l'):'')+(B?(()=>{const bx=+d.bOx||0,by=+d.bOy||0,bh0=g.bw*z*arOf(B,.75),tr=(bx||by)?`transform:translate(${(bx/g.bw*100).toFixed(2)}%,${(by/bh0*100).toFixed(2)}%);`:'',ix=S.blocks.indexOf(d);
-   return `<div ${forExport?'':`data-bmv="${ix}" title="끌어서 옮기기 · 오른쪽 아래 네모를 끌면 크기 조절" `}style="position:relative;display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><div style="overflow:hidden;"${forExport?'':' data-bi="'+ix+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div>${forExport?'':`<div data-bres="${ix}" class="bres" title="끌어서 크기 조절"></div>`}</div>`;})():'')+(R?circ(R,d.rTitle,d.rText,d.rV,'r'):'');
+  const items=(L?circ(L,d.lTitle,d.lText,'','l'):'')+(B?(()=>{const bx=+d.bOx||0,by=+d.bOy||0,bh0=g.bw*z*arOf(B,.75),tr=(bx||by)?`transform:translate(${(bx/g.bw*100).toFixed(2)}%,${(by/bh0*100).toFixed(2)}%);`:'',ix=S.blocks.indexOf(d);
+   return `<div ${forExport?'':`data-bmv="${ix}" title="끌어서 옮기기 · 오른쪽 아래 네모를 끌면 크기 조절" `}style="position:relative;display:inline-block;vertical-align:middle;width:${len(g.bw)};margin-left:${mg('b')};${tr}${forExport?'':'cursor:move;touch-action:none;'}"><div style="overflow:hidden;"${forExport?'':' data-bi="'+ix+'"'}><img src="${esc(B)}" style="width:${(z*100).toFixed(0)}%;max-width:none;margin-left:-${((z-1)/2*100).toFixed(1)}%;display:block;" alt=""></div>${forExport?'':`<div data-bres="${ix}" class="bres" title="끌어서 크기 조절"></div>`}</div>`;})():'')+(R?circ(R,d.rTitle,d.rText,'','r'):'');
   const arrows=()=>{
    if(!B)return '';
    const sides=[];if(L&&(d.lArr||d.lRing))sides.push(['l',L]);if(R&&(d.rArr||d.rRing))sides.push(['r',R]);
@@ -324,7 +322,7 @@ const geo=d=>{
    let sv='';
    sides.forEach(q=>{
     const k=q[0],fx=(d[k+'Ax']===undefined||d[k+'Ax']==='')?(k==='l'?.3:.7):+d[k+'Ax'],fy=(d[k+'Ay']===undefined||d[k+'Ay']==='')?.5:+d[k+'Ay'];
-    let cx=x0+pos[k]+g.dw/2+OX(k),r=g.dw/2,hh=cH(q[1])/2,cy=(d[k+'V']==='top'?hh:d[k+'V']==='bot'?H-hh:H/2)+OY(k),tx=x0+pos.b+fx*g.bw+(+d.bOx||0),ty=H/2-bh/2+fy*bh+(+d.bOy||0);
+    let cx=x0+pos[k]+g.dw/2+OX(k),r=g.dw/2,hh=cH(q[1])/2,cy=H/2+OY(k),tx=x0+pos.b+fx*g.bw+(+d.bOx||0),ty=H/2-bh/2+fy*bh+(+d.bOy||0);
     const f=v=>v.toFixed(1),ring=!!d[k+'Ring'],rr=ring?(+d[k+'RingD']||120)/2:0;
     const rc=d.rc||'#ffea00',rw=+d.rw||5;
     if(ring)sv+=`<circle cx="${f(tx)}" cy="${f(ty)}" r="${f(rr)}" fill="none" stroke="${esc(rc)}" stroke-width="${rw}" ${d[k+'RingS']==='solid'?'':`stroke-dasharray="${f(rw*3)} ${f(rw*2)}"`}/>`;
