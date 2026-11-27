@@ -212,8 +212,9 @@ function detailUI(b,i){
    <label>화면에 넣을 제목 (선택)</label><input type="text" data-f="title" data-i="${i}" value="${esc(b.title)}">
    <label>설명 글 (선택)</label><textarea data-f="text" data-i="${i}">${esc(b.text)}</textarea>`)}`}
   ${sideUI(b,i,'l','왼쪽(L)')}${sideUI(b,i,'r','오른쪽(R)')}
-  <label class="chk" style="font-size:18px;font-weight:700;margin:10px 0 4px"><input type="checkbox" data-f="sepSize" data-i="${i}" ${b.sepSize?'checked':''} style="width:20px;height:20px"> 왼쪽·오른쪽 동그라미 크기 따로 조절</label>
-  <div class="hint" style="margin:0 0 6px">${b.sepSize?'지금은 파란 네모를 끌면 그 동그라미만 커지고 작아집니다.':'지금은 한쪽을 끌면 양쪽이 같이 바뀝니다.'}</div>
+  <details class="side" data-shp="sz${i}" ${(SHP.has('sz'+i)||b.sepSize)?'open':''}><summary style="cursor:pointer;font-weight:700">왼쪽·오른쪽 동그라미 크기 따로 조절 <span style="font-weight:400;font-size:12px;color:#777">${b.sepSize?'(켜져 있음)':'(필요할 때 펼치기)'}</span></summary>
+  <label class="chk" style="margin:8px 0 4px"><input type="checkbox" data-f="sepSize" data-i="${i}" ${b.sepSize?'checked':''}> 따로 조절하기</label>
+  <div class="hint" style="margin:0 0 6px">${b.sepSize?'지금은 파란 네모를 끌면 그 동그라미만 커지고 작아집니다.':'지금은 한쪽을 끌면 양쪽이 같이 바뀝니다.'}</div></details>
   <div style="margin:8px 0;padding:8px;background:#fff8e6;border:1px solid #f0d090;border-radius:8px;font-size:15px">오른쪽 미리보기에서 동그라미와 가운데 기준 이미지를 마우스로 끌어 옮길 수 있습니다. 각각 오른쪽 아래 파란 네모를 끌면 크기가 바뀝니다.
     ${(b.lOx||b.lOy||b.rOx||b.rOy||b.bOx||b.bOy||+b.w>0||+b.dw>0||+b.ldw>0||+b.rdw>0||+b.lCOx||+b.lCOy||+b.rCOx||+b.rCOy||+b.tOx||+b.tOy)?`<br>옮긴 거리: ${(b.bOx||b.bOy)?'기준 이미지 '+(b.bOx||0)+', '+(b.bOy||0)+' ':''}${(b.lOx||b.lOy)?'왼쪽 '+(b.lOx||0)+', '+(b.lOy||0)+' ':''}${(b.rOx||b.rOy)?'오른쪽 '+(b.rOx||0)+', '+(b.rOy||0):''} <button class="sm" type="button" data-dcreset="${i}">위치·크기 되돌리기</button>`:''}</div>
   <div class="trow" style="margin-top:10px"><span>기준 이미지 확대 (흰 여백 줄이기)</span><b>${+b.zoom||130}%</b></div>
@@ -550,7 +551,7 @@ function syncName(){$('msize').checked=S.matchSize!==false;$('pscale').value=S.p
 S.name='코코 (엔틱)';S.sub='';syncName();
 all();
 /* 화살표·동그라미 모양 칸: 평소 접어 두고, 펼친 칸은 다시 그려도 펼친 채로 */
-document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||d.dataset.shp===undefined)return;const i=+d.dataset.shp;d.open?SHP.add(i):SHP.delete(i);},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||d.dataset.shp===undefined)return;const v=d.dataset.shp,i=/^\d+$/.test(v)?+v:v;d.open?SHP.add(i):SHP.delete(i);},true);
 </script>
 </body>
 </html>
